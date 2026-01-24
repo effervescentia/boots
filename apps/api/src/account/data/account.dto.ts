@@ -4,7 +4,8 @@ export type Account = Static<typeof AccountDTO>;
 
 export const AccountDTO = t.Object({
   id: t.String({ format: 'uuid' }),
-  description: t.Nullable(t.String()),
+  username: t.String(),
+  isChild: t.Boolean(),
   createdAt: t.Date(),
   updatedAt: t.Date(),
 });

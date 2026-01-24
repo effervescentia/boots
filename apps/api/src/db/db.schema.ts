@@ -1,5 +1,4 @@
 export * from '@api/account/data/account.db';
-export * from '@api/account/data/account-alias.db';
 export * from '@api/auth/data/auth-credential.db';
 export * from '@api/auth/data/auth-session.db';
 export * from '@api/content/data/text-content.db';

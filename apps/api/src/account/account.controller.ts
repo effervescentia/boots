@@ -2,13 +2,8 @@ import { DatabasePlugin } from '@api/db/db.plugin';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { AccountService } from './account.service';
-import { AccountAliasService } from './account-alias.service';
 import { AccountDTO } from './data/account.dto';
-import { AccountAliasDTO } from './data/account-alias.dto';
 import { AccountDetailsDTO } from './data/account-details.dto';
-import { CreateAccountRequest } from './data/create-account.req';
-import { PatchAccountRequest } from './data/patch-account.req';
-import { UpdateAccountAliasRequest } from './data/update-account-alias.req';
 
 const AccountParams = t.Object({ accountID: t.String({ format: 'uuid' }) });
 
@@ -17,7 +12,6 @@ export const AccountController = new Elysia({ prefix: '/account' })
   .use(EnvironmentPlugin)
   .derive({ as: 'scoped' }, ({ db, env }) => ({
     service: new AccountService(db(), env()),
-    aliasService: new AccountAliasService(db(), env()),
   }))
 
   .get(
@@ -32,11 +26,11 @@ export const AccountController = new Elysia({ prefix: '/account' })
 
   .post(
     '/',
-    async ({ service, body }) => {
-      return service.create(body);
+    async ({ service }) => {
+      return service.create();
     },
     {
-      body: CreateAccountRequest,
+      // body: CreateAccountRequest,
       response: AccountDetailsDTO,
     },
   )
@@ -52,32 +46,6 @@ export const AccountController = new Elysia({ prefix: '/account' })
     {
       params: AccountParams,
       response: AccountDetailsDTO,
-    },
-  )
-
-  .patch(
-    '/:accountID',
-    async ({ service, params, body }) => {
-      return service.patch(params.accountID, body);
-    },
-    {
-      params: AccountParams,
-      body: PatchAccountRequest,
-      response: AccountDTO,
-    },
-  )
-
-  .put(
-    '/:accountID/alias',
-    async ({ aliasService, params, body }) => {
-      await aliasService.update(params.accountID, body);
-
-      return aliasService.getAll(params.accountID);
-    },
-    {
-      params: AccountParams,
-      body: UpdateAccountAliasRequest,
-      response: t.Array(AccountAliasDTO),
     },
   )
 

@@ -3,4 +3,4 @@ import { AccountDTO } from './account.dto';
 
 export type CreateAccount = Static<typeof CreateAccountRequest>;
 
-export const CreateAccountRequest = t.Pick(AccountDTO, ['description']);
+export const CreateAccountRequest = t.Pick(AccountDTO, []);

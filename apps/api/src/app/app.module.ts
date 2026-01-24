@@ -16,5 +16,5 @@ export const App = new Elysia()
   .use(HealthController)
 
   .use(AuthController)
-  .use(AccountController)
-  .use(MemoController);
+  .use(AccountController);
+// .use(MemoController);
