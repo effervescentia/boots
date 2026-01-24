@@ -1,9 +1,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ include "vex-db.fullname" . }}-migration"
+  name: "{{ include "boots-db.fullname" . }}-migration"
   labels:
-    {{- include "vex-db.labels" . | nindent 4 }}
+    {{- include "boots-db.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "1"
@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "vex-db.labels" . | nindent 8 }}
+        {{- include "boots-db.labels" . | nindent 8 }}
     spec:
       containers:
       - name: "{{ .Chart.Name }}-migration"
@@ -19,7 +19,7 @@ spec:
         imagePullPolicy: {{ .Values.migration.image.pullPolicy }}
         envFrom:
           - secretRef:
-              name: "{{ include "vex-db.fullname" . }}-migration-secrets"
+              name: "{{ include "boots-db.fullname" . }}-migration-secrets"
           - configMapRef:
-              name: "{{ include "vex-db.fullname" . }}-migration-config"
+              name: "{{ include "boots-db.fullname" . }}-migration-config"
       restartPolicy: Never

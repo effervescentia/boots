@@ -24,13 +24,13 @@ gateway:
   sectionName: web
 
 route:
-  hostname: app.vex.localhost
+  hostname: app.boots.localhost
 
 tls:
   namespace: traefik
 
 api:
-  host: 'https://api.vex.localhost:1337'
+  host: 'https://api.boots.localhost:1337'
 
 geolocation:
   # cache TTL in seconds

@@ -1,6 +1,6 @@
 apiVersion: v2
-name: vex-db
-description: databases for vex
+name: boots-db
+description: databases for boots
 
 type: application
 

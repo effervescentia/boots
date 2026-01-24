@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "vex-web.fullname" . }}
+  name: {{ include "boots-web.fullname" . }}
   labels:
     app.kubernetes.io/component: server
-    {{- include "vex-web.labels" . | nindent 4 }}
+    {{- include "boots-web.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/component: server
-      {{- include "vex-web.selectorLabels" . | nindent 6 }}
+      {{- include "boots-web.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,7 +19,7 @@ spec:
       {{- end }}
       labels:
         app.kubernetes.io/component: server
-        {{- include "vex-web.labels" . | nindent 8 }}
+        {{- include "boots-web.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -39,7 +39,7 @@ spec:
             {{- end }}
           envFrom:
             - configMapRef:
-                name: {{ include "vex-web.fullname" . }}
+                name: {{ include "boots-web.fullname" . }}
           {{- if .Values.health.enabled }}
           readinessProbe:
             httpGet:

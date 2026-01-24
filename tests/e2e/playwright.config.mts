@@ -8,7 +8,7 @@ export default defineConfig({
   reporter: 'dot',
 
   use: {
-    baseURL: 'https://app.vex.localhost:1337',
+    baseURL: 'https://app.boots.localhost:1337',
     trace: process.env.CI ? 'on' : 'off',
   },
 });

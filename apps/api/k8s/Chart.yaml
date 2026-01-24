@@ -1,6 +1,6 @@
 apiVersion: v2
-name: vex-api
-description: backend of vex
+name: boots-api
+description: backend of boots
 
 type: application
 

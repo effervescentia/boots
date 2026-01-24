@@ -1,9 +1,9 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ include "vex-api.fullname" . }}
+  name: {{ include "boots-api.fullname" . }}
   labels:
-    {{- include "vex-api.labels" . | nindent 4 }}
+    {{- include "boots-api.labels" . | nindent 4 }}
 spec:
   parentRefs:
     - name: {{ .Values.gateway.name }}
@@ -17,5 +17,5 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: {{ include "vex-api.fullname" . }}
+        - name: {{ include "boots-api.fullname" . }}
           port: {{ .Values.service.port }}

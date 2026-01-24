@@ -1,5 +1,5 @@
 {
-  "name": "@vex/test-e2e",
+  "name": "@boots/test-e2e",
   "private": true,
   "scripts": {
     "dev": "playwright test --ui"

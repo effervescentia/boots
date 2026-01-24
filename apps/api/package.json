@@ -1,5 +1,5 @@
 {
-  "name": "@vex/api",
+  "name": "@boots/api",
   "type": "module",
   "main": "src/lib.ts",
   "scripts": {

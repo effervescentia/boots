@@ -7,7 +7,7 @@ RUN npx -y playwright@1.56.1 install --with-deps && \
 
 COPY --parents bun.lock package.json */*/package.json ./
 
-RUN bun install --frozen-lockfile --filter "@vex/test-e2e"
+RUN bun install --frozen-lockfile --filter "@boots/test-e2e"
 
 COPY tests/e2e/src ./tests/e2e/src
 COPY tests/e2e/playwright.config.mts ./tests/e2e/playwright.config.mts

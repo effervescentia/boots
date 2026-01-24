@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "vex-web.fullname" . }}
+  name: {{ include "boots-web.fullname" . }}
   labels:
-    {{- include "vex-web.labels" . | nindent 4 }}
+    {{- include "boots-web.labels" . | nindent 4 }}
 data:
   PORT: {{ .Values.service.port | quote }}
   PORT_HEALTH: {{ .Values.health.port | quote }}

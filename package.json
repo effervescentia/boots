@@ -1,5 +1,5 @@
 {
-  "name": "vex",
+  "name": "boots",
   "private": true,
   "workspaces": [
     "apps/*",

@@ -1,5 +1,5 @@
 {
-  "name": "@vex/web",
+  "name": "@boots/web",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -30,7 +30,7 @@
     "@types/react-dom": "19.0.2",
     "@vanilla-extract/vite-plugin": "5.1.1",
     "@ver0/react-hooks-testing": "1.0.3",
-    "@vex/api": "workspace:*",
+    "@boots/api": "workspace:*",
     "@vitejs/plugin-react": "5.0.4",
     "elysia": "1.4.13",
     "global-jsdom": "27.0.0",

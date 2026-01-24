@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
 metadata:
-  name: "{{ include "vex-api.fullname" . }}-tls"
+  name: "{{ include "boots-api.fullname" . }}-tls"
   namespace: {{ .Values.tls.namespace }}
   labels:
-    {{- include "vex-api.labels" . | nindent 4 }}
+    {{- include "boots-api.labels" . | nindent 4 }}
 data:
   tls.crt: "ref+sops://k8s/secrets.yaml#/API_TLS_CERT"
   tls.key: "ref+sops://k8s/secrets.yaml#/API_TLS_KEY"

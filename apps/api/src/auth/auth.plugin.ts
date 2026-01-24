@@ -8,7 +8,7 @@ import { AuthSessionService } from './auth-session.service';
 import { AuthSessionDB } from './data/auth-session.db';
 
 export const AUTH_COOKIE: CookieOptions = {
-  domain: 'api.vex.localhost',
+  domain: 'api.boots.localhost',
   sameSite: true,
   httpOnly: true,
   secure: true,

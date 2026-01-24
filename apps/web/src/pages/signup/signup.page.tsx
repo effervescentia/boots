@@ -1,31 +1,34 @@
-import { client as webauthn } from '@passwordless-id/webauthn';
-import { DOMAIN } from '@web/app/app.const';
-import { routes } from '@web/app/app.router';
-import { client } from '@web/client';
-import { accountAtom } from '@web/data/account.atom';
-import { preferredCredentialAtom } from '@web/data/preferred-credential.atom';
-import { hasPublicKeySignalAPI } from '@web/utils/capability.util';
-import { Invariant } from '@web/utils/error.util';
-import { unpack } from '@web/utils/request.util';
-import { useSetAtom } from 'jotai';
+import { client as webauthn } from "@passwordless-id/webauthn";
+import { DOMAIN } from "@web/app/app.const";
+import { routes } from "@web/app/app.router";
+import { client } from "@web/client";
+import { accountAtom } from "@web/data/account.atom";
+import { preferredCredentialAtom } from "@web/data/preferred-credential.atom";
+import { hasPublicKeySignalAPI } from "@web/utils/capability.util";
+import { Invariant } from "@web/utils/error.util";
+import { unpack } from "@web/utils/request.util";
+import { useSetAtom } from "jotai";
 
 export const Signup: React.FC = () => {
   const setAccount = useSetAtom(accountAtom);
   const setPreferredCredential = useSetAtom(preferredCredentialAtom);
 
   const signup = async () => {
-    const { challenge } = await client().auth.signup.negotiate.post({}).then(unpack);
+    const { challenge } = await client()
+      .auth.signup.negotiate.post({})
+      .then(unpack);
 
     const registration = await webauthn.register({
-      hints: ['client-device'],
-      userVerification: 'required',
-      user: 'vex',
+      hints: ["client-device"],
+      userVerification: "required",
+      user: "boots",
       challenge,
       domain: DOMAIN,
       timeout: 50_000,
     });
 
-    if (!registration.user.id) throw new Invariant('credential did not yield user');
+    if (!registration.user.id)
+      throw new Invariant("credential did not yield user");
 
     const result = await client()
       .auth.signup.verify.post({ registration })
@@ -49,7 +52,7 @@ export const Signup: React.FC = () => {
     const { account } = result;
     const [alias] = account.aliases;
 
-    if (!alias) throw new Invariant('account created without alias');
+    if (!alias) throw new Invariant("account created without alias");
 
     if (hasPublicKeySignalAPI(PublicKeyCredential)) {
       await PublicKeyCredential.signalCurrentUserDetails({

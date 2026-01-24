@@ -1,6 +1,6 @@
 apiVersion: v2
-name: vex-web
-description: frontend of vex
+name: boots-web
+description: frontend of boots
 
 type: application
 

@@ -10,13 +10,13 @@ migration:
   postgres:
     hostname: db-postgres
     port: 5432
-    database: vex
+    database: boots
     username: postgres
 
 postgres:
   auth:
-    database: vex
-    username: vex
+    database: boots
+    username: boots
     existingSecret: postgres-auth-secrets
 
   primary:
@@ -30,9 +30,9 @@ postgres:
       scripts:
         access.sql: |
           ALTER DEFAULT PRIVILEGES IN SCHEMA public
-            GRANT ALL PRIVILEGES ON TABLES TO vex;
+            GRANT ALL PRIVILEGES ON TABLES TO boots;
           ALTER DEFAULT PRIVILEGES IN SCHEMA public
-            GRANT ALL PRIVILEGES ON SEQUENCES TO vex;
+            GRANT ALL PRIVILEGES ON SEQUENCES TO boots;
 
 redis:
   architecture: standalone

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "{{ include "vex-db.fullname" . }}-migration-config"
+  name: "{{ include "boots-db.fullname" . }}-migration-config"
   labels:
-    {{- include "vex-db.labels" . | nindent 4 }}
+    {{- include "boots-db.labels" . | nindent 4 }}
 data:
   POSTGRES_HOSTNAME: {{ .Values.migration.postgres.hostname }}
   POSTGRES_PORT: {{ .Values.migration.postgres.port | quote }}

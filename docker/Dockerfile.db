@@ -4,7 +4,7 @@ WORKDIR /home/bun/app
 
 COPY --parents package.json bun.lock */*/package.json ./
 
-RUN bun install --frozen-lockfile --filter "@vex/api"
+RUN bun install --frozen-lockfile --filter "@boots/api"
 
 WORKDIR /home/bun/app/apps/api
 

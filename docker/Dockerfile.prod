@@ -17,7 +17,7 @@ RUN bun install --cwd /temp/dev --frozen-lockfile
 
 ARG APP
 
-RUN bun install --cwd /temp/prod --frozen-lockfile --filter "@vex/$APP" --production
+RUN bun install --cwd /temp/prod --frozen-lockfile --filter "@boots/$APP" --production
 
 
 FROM base AS test
@@ -29,7 +29,7 @@ COPY --parents turbo.json apps/* ./
 
 ARG APP
 
-RUN bun run test:unit --filter "@vex/$APP"
+RUN bun run test:unit --filter "@boots/$APP"
 
 
 FROM base AS build
@@ -40,7 +40,7 @@ COPY --from=test /home/bun/app ./
 
 ARG APP
 
-RUN bun run build --filter "@vex/$APP"
+RUN bun run build --filter "@boots/$APP"
 
 
 FROM base AS release-api
