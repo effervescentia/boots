@@ -1,10 +1,10 @@
 import { type Static, t } from 'elysia';
 
-export type Account = Static<typeof AccountDTO>;
+export type Network = Static<typeof NetworkDTO>;
 
-export const AccountDTO = t.Object({
+export const NetworkDTO = t.Object({
   id: t.String({ format: 'uuid' }),
-  username: t.String(),
+  name: t.String(),
   createdAt: t.Date(),
   updatedAt: t.Date(),
 });

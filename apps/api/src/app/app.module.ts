@@ -1,8 +1,9 @@
 import { AccountController } from '@api/account/account.controller';
 import { AuthController } from '@api/auth/auth.controller';
+import { FamilyController } from '@api/family/family.controller';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { HealthController } from '@api/health/health.controller';
-import { MemoController } from '@api/memo/memo.controller';
+import { NetworkController } from '@api/network/network.controller';
 import { cors } from '@elysiajs/cors';
 import Elysia from 'elysia';
 
@@ -16,5 +17,6 @@ export const App = new Elysia()
   .use(HealthController)
 
   .use(AuthController)
-  .use(AccountController);
-// .use(MemoController);
+  .use(AccountController)
+  .use(FamilyController)
+  .use(NetworkController);

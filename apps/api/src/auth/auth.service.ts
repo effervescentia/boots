@@ -19,11 +19,11 @@ import type { VerifyLogin } from './data/verify-login.req';
 import type { VerifySignup } from './data/verify-signup.req';
 
 export class AuthService extends DataService {
-  private static readonly SIGNUP_CHALLENGE = 'auth:signup:challenge';
-  private static readonly LOGIN_CHALLENGE = 'auth:login:challenge';
+  public static readonly SIGNUP_CHALLENGE = 'auth:signup:challenge';
+  public static readonly LOGIN_CHALLENGE = 'auth:login:challenge';
 
   private readonly redis: RedisService;
-  private readonly account: AccountService;
+  private readonly account = new AccountService(this.db);
 
   constructor(
     db: DB,
@@ -33,7 +33,6 @@ export class AuthService extends DataService {
     super(db);
 
     this.redis = new RedisService(redis);
-    this.account = new AccountService(db, env);
   }
 
   async negotiateSignup(_data: NegotiateSignup) {
@@ -46,18 +45,15 @@ export class AuthService extends DataService {
   }
 
   async verifySignup(requestID: string, { registration }: VerifySignup) {
-    const challenge = await this.redis.getHashField(AuthService.SIGNUP_CHALLENGE, requestID);
+    const challenge = await this.redis.getDeleteHashField(AuthService.SIGNUP_CHALLENGE, requestID);
     if (!challenge) throw new NotFoundError();
 
     const result = await webauthn.verifyRegistration(registration, { origin: this.env.WEB_ORIGIN, challenge });
 
     if (!result.userVerified) throw new NotFoundError();
 
-    const account = await this.account.create({ description: null });
-
-    await this.db.insert(AuthCredentialDB).values({
+    const { account } = await this.account.create({
       id: result.credential.id,
-      accountID: account.id,
       publicKey: result.credential.publicKey,
       algorithm: result.credential.algorithm as AuthAlgorithm,
       transports: result.credential.transports as AuthTransport[],
@@ -78,7 +74,7 @@ export class AuthService extends DataService {
   }
 
   async verifyLogin(requestID: string, data: VerifyLogin) {
-    const challenge = await this.redis.getHashField(AuthService.LOGIN_CHALLENGE, requestID);
+    const challenge = await this.redis.getDeleteHashField(AuthService.LOGIN_CHALLENGE, requestID);
     if (!challenge) throw new NotFoundError();
 
     const credential = await this.db.query.AuthCredentialDB.findFirst({
@@ -107,8 +103,8 @@ export class AuthService extends DataService {
     if (!result.userVerified) throw new NotFoundError();
 
     await this.db.delete(AuthSessionDB).where(eq(AuthSessionDB.credentialID, credential.id));
-    const [session] = await this.db.insert(AuthSessionDB).values({ credentialID: credential.id }).returning();
+    const session = await insertOne(this.db, AuthSessionDB, { credentialID: credential.id });
 
-    return { account, session: session! };
+    return { account, session };
   }
 }

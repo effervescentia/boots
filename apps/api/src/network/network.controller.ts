@@ -1,0 +1,123 @@
+import { AuthPlugin } from '@api/auth/auth.plugin';
+import { DatabasePlugin } from '@api/db/db.plugin';
+import { ConflictError } from '@api/global/conflict.error';
+import { ForbiddenError } from '@api/global/forbidden.error';
+import { and, eq } from 'drizzle-orm';
+import Elysia, { NotFoundError, t } from 'elysia';
+import { CreateNetworkRequest } from './data/create-network.req';
+import { NetworkDTO } from './data/network.dto';
+import { NetworkMemberDB } from './data/network-member.db';
+import { NetworkRole } from './data/network-role.enum';
+import { PatchNetworkRequest } from './data/patch-network.req';
+import { NetworkService } from './network.service';
+
+const NetworkParams = t.Object({ networkID: t.String({ format: 'uuid' }) });
+const NetworkMemberParams = t.Composite([NetworkParams, t.Object({ accountID: t.String({ format: 'uuid' }) })]);
+
+export const NetworkController = new Elysia({ prefix: '/network' })
+  .use(DatabasePlugin)
+  .use(AuthPlugin)
+  .derive({ as: 'scoped' }, ({ db }) => {
+    const service = new NetworkService(db());
+
+    return {
+      service,
+
+      assertMembership: async (networkID: string, accountID: string) => {
+        const membership = await service.getMembership(networkID, accountID);
+        if (!membership) throw new NotFoundError(`No Network exists with ID '${networkID}'`);
+        return membership;
+      },
+    };
+  })
+
+  .post(
+    '/',
+    async ({ service, body, principal }) => {
+      return service.create(principal.id, body);
+    },
+    {
+      authenticated: true,
+      body: CreateNetworkRequest,
+      response: NetworkDTO,
+    },
+  )
+
+  .get(
+    '/:networkID',
+    async ({ assertMembership, params, principal }) => {
+      const membership = await assertMembership(params.networkID, principal.id);
+
+      return membership.network;
+    },
+    {
+      authenticated: true,
+      params: NetworkParams,
+      response: NetworkDTO,
+    },
+  )
+
+  .patch(
+    '/:networkID',
+    async ({ db, service, assertMembership, params, body, principal }) => {
+      const membership = await assertMembership(params.networkID, principal.id);
+      const leaderCount = await db().$count(
+        NetworkMemberDB,
+        and(eq(NetworkMemberDB.networkID, params.networkID), eq(NetworkMemberDB.role, NetworkRole.LEADER)),
+      );
+      if (leaderCount && membership.role !== NetworkRole.LEADER) {
+        throw new ForbiddenError('Only leaders can update Network details');
+      }
+
+      return service.patch(params.networkID, body);
+    },
+    {
+      authenticated: true,
+      params: NetworkParams,
+      body: PatchNetworkRequest,
+      response: NetworkDTO,
+    },
+  )
+
+  .delete(
+    '/:networkID',
+    async ({ db, service, assertMembership, params, principal }) => {
+      await assertMembership(params.networkID, principal.id);
+
+      const memberCount = await db().$count(NetworkMemberDB, eq(NetworkMemberDB.networkID, params.networkID));
+      if (memberCount > 1) throw new ConflictError('Networks with more than one member cannot be deleted');
+
+      await service.delete(params.networkID);
+    },
+    {
+      authenticated: true,
+      params: NetworkParams,
+    },
+  )
+
+  .delete(
+    '/:networkID/membership',
+    async ({ service, params, principal }) => {
+      await service.deleteMember(params.networkID, principal.id);
+    },
+    {
+      authenticated: true,
+      params: NetworkParams,
+    },
+  )
+
+  .delete(
+    '/:networkID/member/:accountID',
+    async ({ service, assertMembership, params, principal }) => {
+      const membership = await assertMembership(params.networkID, principal.id);
+      if (membership.role !== NetworkRole.LEADER) {
+        throw new ForbiddenError('Only leaders can remove other Network members');
+      }
+
+      await service.deleteMember(params.networkID, params.accountID);
+    },
+    {
+      authenticated: true,
+      params: NetworkMemberParams,
+    },
+  );

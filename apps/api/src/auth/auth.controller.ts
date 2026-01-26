@@ -24,7 +24,7 @@ export const AuthController = new Elysia({ prefix: '/auth' })
 
     return {
       service: new AuthService(db(), redis(), env()),
-      accountService: new AccountService(db(), env()),
+      accountService: new AccountService(db()),
       sessionService,
 
       refreshAccessToken: async (accessToken: Cookie<string | undefined>, sessionID: number) =>
@@ -52,24 +52,27 @@ export const AuthController = new Elysia({ prefix: '/auth' })
     {
       body: NegotiateSignupRequest,
       cookie: t.Object({ signupRequestID: t.Optional(t.String()) }),
-      response: {
-        200: SignupChallengeResponse,
-      },
+      response: SignupChallengeResponse,
     },
   )
 
   .post(
     '/signup/verify',
     async ({ service, body, cookie: { signupRequestID, accessToken }, refreshAccessToken }) => {
-      const requestID = signupRequestID.value;
-      if (!requestID) throw new NotFoundError();
-      signupRequestID.remove();
+      try {
+        const requestID = signupRequestID.value;
+        if (!requestID) throw new NotFoundError();
+        signupRequestID.remove();
 
-      const { account, session } = await service.verifySignup(requestID, body);
+        const { account, session } = await service.verifySignup(requestID, body);
 
-      await refreshAccessToken(accessToken, session.id);
+        await refreshAccessToken(accessToken, session.id);
 
-      return { account };
+        return { account };
+      } catch (err) {
+        console.log(err);
+        throw err;
+      }
     },
     {
       body: VerifySignupRequest,
@@ -77,9 +80,7 @@ export const AuthController = new Elysia({ prefix: '/auth' })
         signupRequestID: t.Optional(t.String()),
         accessToken: t.Optional(t.String()),
       }),
-      response: {
-        200: AuthenticatedResponse,
-      },
+      response: AuthenticatedResponse,
     },
   )
 
@@ -101,9 +102,7 @@ export const AuthController = new Elysia({ prefix: '/auth' })
       cookie: t.Cookie({
         loginRequestID: t.Optional(t.String()),
       }),
-      response: {
-        200: LoginChallengeResponse,
-      },
+      response: LoginChallengeResponse,
     },
   )
 
@@ -127,9 +126,7 @@ export const AuthController = new Elysia({ prefix: '/auth' })
         loginRequestID: t.Optional(t.String()),
         accessToken: t.Optional(t.String()),
       }),
-      response: {
-        200: AuthenticatedResponse,
-      },
+      response: AuthenticatedResponse,
     },
   )
 
@@ -153,9 +150,7 @@ export const AuthController = new Elysia({ prefix: '/auth' })
       cookie: t.Cookie({
         accessToken: t.String(),
       }),
-      response: {
-        200: AuthenticatedResponse,
-      },
+      response: AuthenticatedResponse,
     },
   )
 

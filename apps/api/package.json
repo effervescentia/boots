@@ -24,15 +24,18 @@
     "elysia": "1.4.13",
     "human-id": "4.1.2",
     "parse-duration": "2.1.4",
-    "pg": "8.16.3"
+    "pg": "8.16.3",
+    "radashi": "12.7.1"
   },
   "devDependencies": {
     "@bltx/test": "1.6.0",
     "@electric-sql/pglite": "0.3.5",
+    "@testcontainers/redis": "11.11.0",
     "@types/pg": "8.15.5",
     "drizzle-kit": "0.31.4",
     "glob": "11.0.3",
     "jest-date": "1.1.6",
-    "rimraf": "6.0.1"
+    "rimraf": "6.0.1",
+    "testcontainers": "11.11.0"
   }
 }

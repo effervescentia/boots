@@ -15,6 +15,13 @@
       "when": 1762405839837,
       "tag": "0001_greedy_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769457798252,
+      "tag": "0002_daffy_barracuda",
+      "breakpoints": true
     }
   ]
 }

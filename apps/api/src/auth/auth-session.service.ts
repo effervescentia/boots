@@ -15,14 +15,13 @@ export class AuthSessionService extends DataService {
 
   public readonly accessToken: ReturnType<typeof AuthSessionService.createAccessToken>;
 
-  constructor(db: DB, env: Environment) {
+  constructor(
+    db: DB,
+    private readonly env: Environment,
+  ) {
     super(db);
 
-    this.accessToken = jwt({
-      secret: env.JWT_AUTH_SECRET,
-      schema: AccessToken,
-      exp: '10m',
-    }).decorator.jwt;
+    this.accessToken = AuthSessionService.createAccessToken(this.env.JWT_AUTH_SECRET);
   }
 
   async get(sessionID: number) {

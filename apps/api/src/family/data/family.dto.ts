@@ -1,10 +1,10 @@
 import { type Static, t } from 'elysia';
 
-export type Account = Static<typeof AccountDTO>;
+export type Family = Static<typeof FamilyDTO>;
 
-export const AccountDTO = t.Object({
+export const FamilyDTO = t.Object({
   id: t.String({ format: 'uuid' }),
-  username: t.String(),
+  name: t.String(),
   createdAt: t.Date(),
   updatedAt: t.Date(),
 });

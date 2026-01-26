@@ -18,4 +18,9 @@ export class RedisService {
   getHashField(hashKey: string, key: string) {
     return this.client.hget(hashKey, key);
   }
+
+  async getDeleteHashField(hashKey: string, key: string) {
+    const results = await this.client.hgetdel(hashKey, 'FIELDS', 1, key);
+    return results[0]!;
+  }
 }

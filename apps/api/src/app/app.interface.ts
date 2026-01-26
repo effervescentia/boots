@@ -1,10 +1,9 @@
 export type { Account } from '@api/account/data/account.dto';
-export type { AccountAlias } from '@api/account/data/account-alias.dto';
 export type { AccountDetails } from '@api/account/data/account-details.dto';
 export type { AuthCredential } from '@api/auth/data/auth-credential.dto';
 export type { AuthSession } from '@api/auth/data/auth-session.dto';
 export { AuthTransport } from '@api/auth/data/auth-transport.enum';
-export type { TextContent } from '@api/content/data/text-content.dto';
-export type { Memo } from '@api/memo/data/memo.dto';
-export type { MemoBoost } from '@api/memo/data/memo-boost.dto';
-export type { MemoWithContent } from '@api/memo/data/memo-with-content.dto';
+export type { Family } from '@api/family/data/family.dto';
+export { FamilyRole } from '@api/family/data/family-role.enum';
+export type { Network } from '@api/network/data/network.dto';
+export { NetworkRole } from '@api/network/data/network-role.enum';
