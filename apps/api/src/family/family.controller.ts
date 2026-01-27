@@ -1,9 +1,14 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
 import { DatabasePlugin } from '@api/db/db.plugin';
 import { ForbiddenError } from '@api/global/forbidden.error';
+import { RedisPlugin } from '@api/redis/redis.plugin';
+import { eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { CreateFamilyRequest } from './data/create-family.req';
+import { CreateFamilyInviteRequest } from './data/create-family-invite.req';
+import { FamilyDB } from './data/family.db';
 import { FamilyDTO } from './data/family.dto';
+import { FamilyInviteResponse } from './data/family-invite.res';
 import { FamilyRole } from './data/family-role.enum';
 import { PatchFamilyRequest } from './data/patch-family.req';
 import { FamilyService } from './family.service';
@@ -19,9 +24,10 @@ class FamilyNotFoundError extends NotFoundError {
 
 export const FamilyController = new Elysia({ prefix: '/family' })
   .use(DatabasePlugin)
+  .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db }) => {
-    const service = new FamilyService(db());
+  .derive({ as: 'scoped' }, ({ db, redis }) => {
+    const service = new FamilyService(db(), redis());
 
     return {
       service,
@@ -112,5 +118,37 @@ export const FamilyController = new Elysia({ prefix: '/family' })
     {
       authenticated: true,
       params: FamilyMemberParams,
+    },
+  )
+
+  .post(
+    '/:familyID/invite',
+    async ({ service, assertMembership, params, body, principal }) => {
+      const membership = await assertMembership(params.familyID, principal.id);
+      if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can invite other Family members');
+
+      const inviteID = await service.createInvite(params.familyID, body);
+
+      return { inviteID };
+    },
+    {
+      authenticated: true,
+      params: FamilyParams,
+      body: CreateFamilyInviteRequest,
+      response: FamilyInviteResponse,
+    },
+  )
+
+  .put(
+    '/invite/:inviteID',
+    async ({ db, service, params, principal }) => {
+      const familyID = await service.acceptInvite(principal.id, params.inviteID);
+
+      return (await db().query.FamilyDB.findFirst({ where: eq(FamilyDB.id, familyID) })) ?? null;
+    },
+    {
+      authenticated: true,
+      params: t.Object({ inviteID: t.String({ format: 'uuid' }) }),
+      response: t.Nullable(FamilyDTO),
     },
   );

@@ -1,7 +1,13 @@
 import type { RedisClient } from 'bun';
+import type { Static, TSchema } from 'elysia';
+import { TypeCompiler } from 'elysia/type-system';
 
 export interface SetOptions {
   ttl?: number;
+}
+
+export interface GetOptions {
+  delete?: boolean;
 }
 
 export class RedisService {
@@ -15,12 +21,36 @@ export class RedisService {
     return this.client.hsetex(hashKey, 'FIELDS', 1, key, value);
   }
 
-  getHashField(hashKey: string, key: string) {
+  async getHashField(hashKey: string, key: string, { delete: delete_ = false }: GetOptions = {}) {
+    if (delete_) {
+      const results = await this.client.hgetdel(hashKey, 'FIELDS', 1, key);
+      return results[0]!;
+    }
+
     return this.client.hget(hashKey, key);
   }
 
-  async getDeleteHashField(hashKey: string, key: string) {
-    const results = await this.client.hgetdel(hashKey, 'FIELDS', 1, key);
-    return results[0]!;
+  setTypedHashField<Schema extends TSchema>(
+    schema: Schema,
+    hashKey: string,
+    key: string,
+    value: Static<Schema>,
+    options?: SetOptions,
+  ) {
+    const decoded = TypeCompiler.Compile(schema).Decode(value);
+
+    return this.setHashField(hashKey, key, JSON.stringify(decoded), options);
+  }
+
+  async getTypedHashField<Schema extends TSchema>(
+    schema: Schema,
+    hashKey: string,
+    key: string,
+    options?: GetOptions,
+  ): Promise<Static<Schema>> {
+    const result = await this.getHashField(hashKey, key, options);
+    if (result === null) return null;
+
+    return TypeCompiler.Compile(schema).Encode(result);
   }
 }

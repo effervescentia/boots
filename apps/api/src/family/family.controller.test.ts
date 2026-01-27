@@ -3,13 +3,16 @@ import { AccountService } from '@api/account/account.service';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
 import type { DB } from '@api/db/db.types';
+import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateFamily } from './data/create-family.req';
+import type { CreateFamilyInvite } from './data/create-family-invite.req';
 import { FamilyDB } from './data/family.db';
 import type { Family } from './data/family.dto';
+import type { FamilyInvite } from './data/family-invite.res';
 import { FamilyMemberDB } from './data/family-member.db';
 import { FamilyRole } from './data/family-role.enum';
 import type { PatchFamily } from './data/patch-family.req';
@@ -27,7 +30,7 @@ describe('FamilyController', () => {
   };
 
   const createFamily = (db: DB, accountID: string, { name = 'My Family', ...data }: Partial<CreateFamily> = {}) => {
-    return new FamilyService(db).create(accountID, { name, ...data });
+    return new FamilyService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
   const createFamilyMember = async (db: DB, familyID: string) => {
@@ -291,6 +294,65 @@ describe('FamilyController', () => {
       expect(() => request(account.id, family.id, familyMember.id)).toThrowError(
         'Only adults can remove other Family members',
       );
+    });
+  });
+
+  describe('POST /family/:familyID/invite', () => {
+    const { app, db } = setupIntegrationTest(FamilyController);
+
+    const request = (
+      accountID: string,
+      familyID: string,
+      data: CreateFamilyInvite,
+    ): Promise<Serialized<FamilyInvite>> =>
+      app()
+        .handle(
+          new MockRequest(`/family/${familyID}/invite`, {
+            method: 'post',
+            json: data,
+            headers: { 'test-principal': accountID },
+          }),
+        )
+        .then((res) => res.json());
+
+    test('create a family invite', async () => {
+      const { account } = await createAccount(db());
+      const family = await createFamily(db(), account.id);
+
+      const result = await request(account.id, family.id, {});
+
+      expect(result).toEqual({ inviteID: expect.any(String) });
+      expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, result.inviteID)).toBeTrue();
+    });
+  });
+
+  describe('POST /family/invite/:inviteID', () => {
+    const { app, db } = setupIntegrationTest(FamilyController);
+
+    const request = (accountID: string, inviteID: string) =>
+      app().handle(
+        new MockRequest(`/family/invite/${inviteID}`, {
+          method: 'put',
+          headers: { 'test-principal': accountID },
+        }),
+      );
+
+    test('accept a family invite', async () => {
+      const { account } = await createAccount(db());
+      const family = await createFamily(db(), account.id);
+      const inviteID = await new FamilyService(db(), RedisPlugin.decorator.redis()).createInvite(family.id, {
+        role: FamilyRole.CHILD,
+      });
+
+      await request(account.id, inviteID);
+
+      expect(
+        await db().$count(
+          FamilyMemberDB,
+          and(eq(FamilyMemberDB.accountID, account.id), eq(FamilyMemberDB.familyID, family.id)),
+        ),
+      ).toBe(1);
+      expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();
     });
   });
 });

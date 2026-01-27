@@ -45,7 +45,7 @@ export class AuthService extends DataService {
   }
 
   async verifySignup(requestID: string, { registration }: VerifySignup) {
-    const challenge = await this.redis.getDeleteHashField(AuthService.SIGNUP_CHALLENGE, requestID);
+    const challenge = await this.redis.getHashField(AuthService.SIGNUP_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
     const result = await webauthn.verifyRegistration(registration, { origin: this.env.WEB_ORIGIN, challenge });
@@ -74,7 +74,7 @@ export class AuthService extends DataService {
   }
 
   async verifyLogin(requestID: string, data: VerifyLogin) {
-    const challenge = await this.redis.getDeleteHashField(AuthService.LOGIN_CHALLENGE, requestID);
+    const challenge = await this.redis.getHashField(AuthService.LOGIN_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
     const credential = await this.db.query.AuthCredentialDB.findFirst({
