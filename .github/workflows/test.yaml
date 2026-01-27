@@ -20,7 +20,7 @@ jobs:
         with:
           bun-version-file: package.json
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --ignore-scripts --frozen-lockfile
       - name: Check types
         run: bun run check:types
       - name: Run tests

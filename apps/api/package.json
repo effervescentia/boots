@@ -38,5 +38,8 @@
     "jest-date": "1.1.6",
     "rimraf": "6.0.1",
     "testcontainers": "11.11.0"
+  },
+  "volta": {
+    "extends": "../../package.json"
   }
 }

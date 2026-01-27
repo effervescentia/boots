@@ -13,11 +13,11 @@ COPY --parents */*/package.json /temp/dev/
 COPY package.json bun.lock /temp/prod/
 COPY --parents */*/package.json /temp/prod/
 
-RUN bun install --cwd /temp/dev --frozen-lockfile
+RUN bun install --ignore-scripts --cwd /temp/dev --frozen-lockfile
 
 ARG APP
 
-RUN bun install --cwd /temp/prod --frozen-lockfile --filter "@boots/$APP" --production
+RUN bun install --ignore-scripts --cwd /temp/prod --frozen-lockfile --filter "@boots/$APP" --production
 
 
 FROM base AS test

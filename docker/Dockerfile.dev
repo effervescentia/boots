@@ -7,7 +7,7 @@ RUN apk add entr=5.5-r0 --no-cache
 COPY package.json bun.lock ./
 COPY --parents */*/package.json ./
 
-RUN bun install --frozen-lockfile
+RUN bun install --ignore-scripts --frozen-lockfile
 
 COPY . .
 

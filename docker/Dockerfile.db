@@ -4,7 +4,7 @@ WORKDIR /home/bun/app
 
 COPY --parents package.json bun.lock */*/package.json ./
 
-RUN bun install --frozen-lockfile --filter "@boots/api"
+RUN bun install --ignore-scripts --frozen-lockfile --filter "@boots/api"
 
 WORKDIR /home/bun/app/apps/api
 

@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "{{ include "boots-api.fullname" . }}-heartbeat-expiry"
+  labels:
+    app.kubernetes.io/component: server
+    {{- include "boots-api.labels" . | nindent 4 }}
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          labels:
+            {{- include "boots-api.labels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        spec:
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+                - 'bun src/heartbeat/heartbeat-expiry.cron.ts'
+              envFrom:
+                - secretRef:
+                    name: "{{ include "boots-api.fullname" . }}-secrets"
+                - configMapRef:
+                    name: {{ include "boots-api.fullname" . }}
+          restartPolicy: OnFailure
