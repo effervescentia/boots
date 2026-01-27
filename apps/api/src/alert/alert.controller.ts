@@ -4,8 +4,6 @@ import Elysia, { t } from 'elysia';
 import { AlertService } from './alert.service';
 import { AlertDB } from './data/alert.db';
 import { AlertDTO } from './data/alert.dto';
-import { CreateAlertRequest } from './data/create-alert.req';
-import { PatchAlertRequest } from './data/patch-alert.req';
 
 const AlertParams = t.Object({ alertID: t.String({ format: 'uuid' }) });
 
@@ -23,17 +21,6 @@ export const AlertController = new Elysia({ prefix: '/alert' })
     },
   )
 
-  .post(
-    '/',
-    async ({ service, body }) => {
-      return service.create(body);
-    },
-    {
-      body: CreateAlertRequest,
-      response: AlertDTO,
-    },
-  )
-
   .get(
     '/:alertID',
     async ({ db, params, status }) => {
@@ -48,18 +35,6 @@ export const AlertController = new Elysia({ prefix: '/alert' })
         200: AlertDTO,
         404: t.String(),
       },
-    },
-  )
-
-  .patch(
-    '/:alertID',
-    async ({ service, params, body }) => {
-      return service.patch(params.alertID, body);
-    },
-    {
-      params: AlertParams,
-      body: PatchAlertRequest,
-      response: AlertDTO,
     },
   )
 

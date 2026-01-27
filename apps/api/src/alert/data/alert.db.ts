@@ -4,6 +4,7 @@ import { createdTimestamp, id, uuidV7 } from '@bltx/db';
 import { relations } from 'drizzle-orm';
 import { pgTable } from 'drizzle-orm/pg-core';
 import { HeartbeatExpiredAlertDB } from '../../heartbeat/data/heartbeat-expired-alert.db';
+import { AlertType } from './alert-type.enum';
 
 export const AlertDB = pgTable('alert', {
   id: id('id'),
@@ -13,7 +14,7 @@ export const AlertDB = pgTable('alert', {
 });
 
 export const AlertRelations = relations(AlertDB, ({ one }) => ({
-  heartbeat_expired: one(HeartbeatExpiredAlertDB),
+  [AlertType.HEARTBEAT_EXPIRED]: one(HeartbeatExpiredAlertDB),
   family: one(FamilyDB, { fields: [AlertDB.familyID], references: [FamilyDB.id] }),
   network: one(NetworkDB, { fields: [AlertDB.networkID], references: [NetworkDB.id] }),
 }));

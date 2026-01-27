@@ -1,8 +1,11 @@
+import { AlertService } from '@api/alert/alert.service';
 import { AlertDB } from '@api/alert/data/alert.db';
+import { AlertType } from '@api/alert/data/alert-type.enum';
 import { ConflictError } from '@api/global/conflict.error';
 import { DataService } from '@api/global/data.service';
 import { insertOne } from '@bltx/db';
 import { and, eq, getTableColumns, isNull, lte, or, sql } from 'drizzle-orm';
+import { match, P } from 'ts-pattern';
 import type { CreateHeartbeat } from './data/create-heartbeat.req';
 import { HeartbeatDB } from './data/heartbeat.db';
 import { HeartbeatExpiredAlertDB } from './data/heartbeat-expired-alert.db';
@@ -33,7 +36,7 @@ export class HeartbeatService extends DataService {
       .as('alert');
 
     const triggers = await this.db
-      .select({ ...getTableColumns(HeartbeatTriggerDB), alert: alert._.selectedFields })
+      .select(getTableColumns(HeartbeatTriggerDB))
       .from(HeartbeatTriggerDB)
       .innerJoin(HeartbeatDB, eq(HeartbeatDB.id, HeartbeatTriggerDB.heartbeatID))
       .leftJoin(
@@ -53,13 +56,21 @@ export class HeartbeatService extends DataService {
         ),
       );
 
+    const alertService = new AlertService(this.db);
+
     for (const trigger of triggers) {
-      await this.transaction(async (tx) => {
-        const alert = await insertOne(tx, AlertDB, { familyID: trigger.familyID, networkID: trigger.networkID });
-        await insertOne(tx, HeartbeatExpiredAlertDB, { alertID: alert.id, heartbeatID: trigger.heartbeatID });
-      });
+      const target = match(trigger)
+        .with({ familyID: P.select(P.string) }, (familyID) => ({ familyID }))
+        .with({ networkID: P.select(P.string) }, (networkID) => ({ networkID }))
+        .otherwise(() => null);
+
+      if (target) {
+        await alertService.create(target, AlertType.HEARTBEAT_EXPIRED, {
+          heartbeatID: trigger.heartbeatID,
+        });
+      }
     }
 
-    console.log(`Created ${triggers.length} heartbeat_expired alerts`);
+    console.log(`Created ${triggers.length} ${AlertType.HEARTBEAT_EXPIRED} alerts`);
   }
 }

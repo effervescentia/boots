@@ -26,7 +26,8 @@
     "human-id": "4.1.2",
     "parse-duration": "2.1.4",
     "pg": "8.16.3",
-    "radashi": "12.7.1"
+    "radashi": "12.7.1",
+    "ts-pattern": "5.9.0"
   },
   "devDependencies": {
     "@bltx/test": "1.6.0",
