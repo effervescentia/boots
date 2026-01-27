@@ -11,6 +11,7 @@ import { NetworkDB } from './data/network.db';
 import { NetworkDTO } from './data/network.dto';
 import { NetworkInviteResponse } from './data/network-invite.res';
 import { NetworkMemberDB } from './data/network-member.db';
+import { NetworkNotFoundError } from './data/network-not-found.error';
 import { NetworkRole } from './data/network-role.enum';
 import { PatchNetworkRequest } from './data/patch-network.req';
 import { NetworkService } from './network.service';
@@ -30,7 +31,7 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
       assertMembership: async (networkID: string, accountID: string) => {
         const membership = await service.getMembership(networkID, accountID);
-        if (!membership) throw new NotFoundError(`No Network exists with ID '${networkID}'`);
+        if (!membership) throw new NetworkNotFoundError(networkID);
         return membership;
       },
     };

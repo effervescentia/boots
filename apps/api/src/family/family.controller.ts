@@ -9,18 +9,13 @@ import { CreateFamilyInviteRequest } from './data/create-family-invite.req';
 import { FamilyDB } from './data/family.db';
 import { FamilyDTO } from './data/family.dto';
 import { FamilyInviteResponse } from './data/family-invite.res';
+import { FamilyNotFoundError } from './data/family-not-found.error';
 import { FamilyRole } from './data/family-role.enum';
 import { PatchFamilyRequest } from './data/patch-family.req';
 import { FamilyService } from './family.service';
 
 const FamilyParams = t.Object({ familyID: t.String({ format: 'uuid' }) });
 const FamilyMemberParams = t.Composite([FamilyParams, t.Object({ accountID: t.String({ format: 'uuid' }) })]);
-
-class FamilyNotFoundError extends NotFoundError {
-  constructor(familyID: string) {
-    super(`No Family exists with ID '${familyID}'`);
-  }
-}
 
 export const FamilyController = new Elysia({ prefix: '/family' })
   .use(DatabasePlugin)
