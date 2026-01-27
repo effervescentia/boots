@@ -7,4 +7,5 @@ export const AccountDTO = t.Object({
   username: t.String(),
   createdAt: t.Date(),
   updatedAt: t.Date(),
+  deletedAt: t.Nullable(t.Date()),
 });

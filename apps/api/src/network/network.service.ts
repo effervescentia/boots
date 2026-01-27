@@ -8,9 +8,9 @@ import { and, eq } from 'drizzle-orm';
 import type { CreateNetwork } from './data/create-network.req';
 import type { CreateNetworkInvite } from './data/create-network-invite.req';
 import { NetworkDB } from './data/network.db';
+import { NetworkAuditLogDB } from './data/network-audit-log.db';
 import type { NetworkInvite } from './data/network-invite.res';
 import { NetworkInviteDataDTO } from './data/network-invite-data.dto';
-import { NetworkInviteRecordDB } from './data/network-invite-record.db';
 import { NetworkMemberDB } from './data/network-member.db';
 import type { PatchNetwork } from './data/patch-network.req';
 import { NETWORK_INVITE_TTL } from './network.const';
@@ -91,10 +91,13 @@ export class NetworkService extends DataService {
         networkID: invite.networkID,
         role: invite.role,
       });
-      await insertOne(tx, NetworkInviteRecordDB, {
+      await insertOne(tx, NetworkAuditLogDB, {
         networkID: invite.networkID,
-        invitedID: accountID,
-        invitedBy: invite.invitedBy,
+        data: {
+          type: 'join_network',
+          accountID,
+          invitedBy: invite.invitedBy,
+        },
       });
     });
 

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
+import { AuthCredentialDB } from '@api/db/db.schema';
 import type { DB } from '@api/db/db.types';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { setupIntegrationTest } from '@test/setup.util';
@@ -58,7 +59,12 @@ describe('AccountController', () => {
 
       await request(account.id);
 
-      expect(await db().$count(AccountDB, eq(AccountDB.id, account.id))).toBe(0);
+      expect(await db().query.AccountDB.findFirst({ where: eq(AccountDB.id, account.id) })).toEqual(
+        expect.objectContaining({
+          deletedAt: expect.any(Date),
+        }),
+      );
+      expect(await db().$count(AuthCredentialDB, eq(AuthCredentialDB.accountID, account.id))).toBe(0);
     });
   });
 });

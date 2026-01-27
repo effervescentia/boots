@@ -3,12 +3,13 @@ import { FamilyMemberDB } from '@api/family/data/family-member.db';
 import { NetworkMemberDB } from '@api/network/data/network-member.db';
 import { id, timestamps } from '@bltx/db';
 import { relations } from 'drizzle-orm';
-import { pgTable, text } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const AccountDB = pgTable('account', {
   id: id('id'),
-  username: text('username').notNull(),
+  username: text('username').unique().notNull(),
   ...timestamps,
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 export const AccountRelations = relations(AccountDB, ({ many }) => ({

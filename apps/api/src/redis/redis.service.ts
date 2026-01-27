@@ -37,7 +37,13 @@ export class RedisService {
     value: Static<Schema>,
     options?: SetOptions,
   ) {
-    const encoded = TypeCompiler.Compile(schema).Encode(value);
+    const compiler = TypeCompiler.Compile(schema);
+
+    if (!compiler.Check(value)) {
+      throw new Error(`Failed to deserialize redis hash field value:\n${value}`);
+    }
+
+    const encoded = compiler.Encode(value);
 
     return this.setHashField(hashKey, key, JSON.stringify(encoded), options);
   }

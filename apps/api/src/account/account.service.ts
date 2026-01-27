@@ -1,8 +1,9 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
 import type { AuthCredential } from '@api/auth/data/auth-credential.dto';
 import type { CreateAuthCredential } from '@api/auth/data/create-auth-credential.interface';
+import { FamilyMemberDB, NetworkMemberDB } from '@api/db/db.schema';
 import { DataService } from '@api/global/data.service';
-import { insertOne } from '@bltx/db';
+import { insertOne, updateOne } from '@bltx/db';
 import { eq } from 'drizzle-orm';
 import { InternalServerError } from 'elysia';
 import { humanId } from 'human-id';
@@ -85,6 +86,9 @@ export class AccountService extends DataService {
   }
 
   async delete(accountID: string) {
-    await this.db.delete(AccountDB).where(eq(AccountDB.id, accountID));
+    await updateOne(this.db, AccountDB, eq(AccountDB.id, accountID), { deletedAt: new Date() });
+    await this.db.delete(FamilyMemberDB).where(eq(FamilyMemberDB.accountID, accountID));
+    await this.db.delete(NetworkMemberDB).where(eq(NetworkMemberDB.accountID, accountID));
+    await this.db.delete(AuthCredentialDB).where(eq(AuthCredentialDB.accountID, accountID));
   }
 }

@@ -13,8 +13,8 @@ import type { CreateNetwork } from './data/create-network.req';
 import type { CreateNetworkInvite } from './data/create-network-invite.req';
 import { NetworkDB } from './data/network.db';
 import type { Network } from './data/network.dto';
+import { NetworkAuditLogDB } from './data/network-audit-log.db';
 import type { NetworkInvite } from './data/network-invite.res';
-import { NetworkInviteRecordDB } from './data/network-invite-record.db';
 import { NetworkMemberDB } from './data/network-member.db';
 import type { PatchNetwork } from './data/patch-network.req';
 import { NetworkController } from './network.controller';
@@ -365,12 +365,15 @@ describe('NetworkController', () => {
         ),
       ).toBe(1);
       expect(
-        await db().query.NetworkInviteRecordDB.findFirst({ where: eq(NetworkInviteRecordDB.networkID, network.id) }),
+        await db().query.NetworkAuditLogDB.findFirst({ where: eq(NetworkAuditLogDB.networkID, network.id) }),
       ).toEqual(
         expect.objectContaining({
           networkID: network.id,
-          invitedID: invitedAccount.id,
-          invitedBy: invitedByAccount.id,
+          data: {
+            type: 'join_network',
+            accountID: invitedAccount.id,
+            invitedBy: invitedByAccount.id,
+          },
         }),
       );
       expect(await RedisPlugin.decorator.redis().hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();

@@ -140,9 +140,13 @@ export const FamilyController = new Elysia({ prefix: '/family' })
   .put(
     '/invite/:inviteID',
     async ({ db, service, params, principal }) => {
-      const familyID = await service.acceptInvite(principal.id, params.inviteID);
+      try {
+        const familyID = await service.acceptInvite(principal.id, params.inviteID);
 
-      return (await db().query.FamilyDB.findFirst({ where: eq(FamilyDB.id, familyID) })) ?? null;
+        return (await db().query.FamilyDB.findFirst({ where: eq(FamilyDB.id, familyID) })) ?? null;
+      } catch {
+        throw new NotFoundError();
+      }
     },
     {
       authenticated: true,

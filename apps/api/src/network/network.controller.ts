@@ -148,9 +148,13 @@ export const NetworkController = new Elysia({ prefix: '/network' })
   .put(
     '/invite/:inviteID',
     async ({ db, service, params, principal }) => {
-      const networkID = await service.acceptInvite(principal.id, params.inviteID);
+      try {
+        const networkID = await service.acceptInvite(principal.id, params.inviteID);
 
-      return (await db().query.NetworkDB.findFirst({ where: eq(NetworkDB.id, networkID) })) ?? null;
+        return (await db().query.NetworkDB.findFirst({ where: eq(NetworkDB.id, networkID) })) ?? null;
+      } catch {
+        throw new NotFoundError();
+      }
     },
     {
       authenticated: true,
