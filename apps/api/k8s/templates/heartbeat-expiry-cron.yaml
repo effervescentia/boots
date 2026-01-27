@@ -3,12 +3,16 @@ kind: CronJob
 metadata:
   name: "{{ include "boots-api.fullname" . }}-heartbeat-expiry"
   labels:
-    app.kubernetes.io/component: server
+    app.kubernetes.io/component: job
     {{- include "boots-api.labels" . | nindent 4 }}
 spec:
-  schedule: "*/10 * * * *"
+  schedule: "*/1 * * * *"
   concurrencyPolicy: Replace
   jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/component: job
+        {{- include "boots-api.labels" . | nindent 8 }}
     spec:
       template:
         metadata:
@@ -17,13 +21,14 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           labels:
+            app.kubernetes.io/component: job
             {{- include "boots-api.labels" . | nindent 12 }}
             {{- with .Values.podLabels }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
         spec:
           containers:
-            - name: {{ .Chart.Name }}
+            - name: "{{ .Chart.Name }}-heartbeat-expiry"
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               command:
