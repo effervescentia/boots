@@ -2,10 +2,14 @@ import { AuthPlugin } from '@api/auth/auth.plugin';
 import { DatabasePlugin } from '@api/db/db.plugin';
 import { ConflictError } from '@api/global/conflict.error';
 import { ForbiddenError } from '@api/global/forbidden.error';
+import { RedisPlugin } from '@api/redis/redis.plugin';
 import { and, eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { CreateNetworkRequest } from './data/create-network.req';
+import { CreateNetworkInviteRequest } from './data/create-network-invite.req';
+import { NetworkDB } from './data/network.db';
 import { NetworkDTO } from './data/network.dto';
+import { NetworkInviteResponse } from './data/network-invite.res';
 import { NetworkMemberDB } from './data/network-member.db';
 import { NetworkRole } from './data/network-role.enum';
 import { PatchNetworkRequest } from './data/patch-network.req';
@@ -16,9 +20,10 @@ const NetworkMemberParams = t.Composite([NetworkParams, t.Object({ accountID: t.
 
 export const NetworkController = new Elysia({ prefix: '/network' })
   .use(DatabasePlugin)
+  .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db }) => {
-    const service = new NetworkService(db());
+  .derive({ as: 'scoped' }, ({ db, redis }) => {
+    const service = new NetworkService(db(), redis());
 
     return {
       service,
@@ -119,5 +124,37 @@ export const NetworkController = new Elysia({ prefix: '/network' })
     {
       authenticated: true,
       params: NetworkMemberParams,
+    },
+  )
+
+  .post(
+    '/:networkID/invite',
+    async ({ service, assertMembership, params, body, principal }) => {
+      const membership = await assertMembership(params.networkID, principal.id);
+      if (body.role === NetworkRole.LEADER && membership.role !== NetworkRole.LEADER) {
+        throw new ForbiddenError('Only leaders can invite other leaders');
+      }
+
+      return service.createInvite(params.networkID, principal.id, body);
+    },
+    {
+      authenticated: true,
+      params: NetworkParams,
+      body: CreateNetworkInviteRequest,
+      response: NetworkInviteResponse,
+    },
+  )
+
+  .put(
+    '/invite/:inviteID',
+    async ({ db, service, params, principal }) => {
+      const networkID = await service.acceptInvite(principal.id, params.inviteID);
+
+      return (await db().query.NetworkDB.findFirst({ where: eq(NetworkDB.id, networkID) })) ?? null;
+    },
+    {
+      authenticated: true,
+      params: t.Object({ inviteID: t.String({ format: 'uuid' }) }),
+      response: t.Nullable(NetworkDTO),
     },
   );

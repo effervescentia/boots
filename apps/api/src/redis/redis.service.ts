@@ -37,9 +37,9 @@ export class RedisService {
     value: Static<Schema>,
     options?: SetOptions,
   ) {
-    const decoded = TypeCompiler.Compile(schema).Decode(value);
+    const encoded = TypeCompiler.Compile(schema).Encode(value);
 
-    return this.setHashField(hashKey, key, JSON.stringify(decoded), options);
+    return this.setHashField(hashKey, key, JSON.stringify(encoded), options);
   }
 
   async getTypedHashField<Schema extends TSchema>(
@@ -51,6 +51,6 @@ export class RedisService {
     const result = await this.getHashField(hashKey, key, options);
     if (result === null) return null;
 
-    return TypeCompiler.Compile(schema).Encode(result);
+    return TypeCompiler.Compile(schema).Decode(JSON.parse(result));
   }
 }

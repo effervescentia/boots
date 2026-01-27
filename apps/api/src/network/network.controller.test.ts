@@ -4,13 +4,17 @@ import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
 import type { DB } from '@api/db/db.types';
 import { NetworkRole } from '@api/lib';
+import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateNetwork } from './data/create-network.req';
+import type { CreateNetworkInvite } from './data/create-network-invite.req';
 import { NetworkDB } from './data/network.db';
 import type { Network } from './data/network.dto';
+import type { NetworkInvite } from './data/network-invite.res';
+import { NetworkInviteRecordDB } from './data/network-invite-record.db';
 import { NetworkMemberDB } from './data/network-member.db';
 import type { PatchNetwork } from './data/patch-network.req';
 import { NetworkController } from './network.controller';
@@ -27,7 +31,7 @@ describe('NetworkController', () => {
   };
 
   const createNetwork = (db: DB, accountID: string, { name = 'My Network', ...data }: Partial<CreateNetwork> = {}) => {
-    return new NetworkService(db).create(accountID, { name, ...data });
+    return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
   const createNetworkMember = async (db: DB, networkID: string, role?: NetworkRole) => {
@@ -296,6 +300,80 @@ describe('NetworkController', () => {
       expect(() => request(account.id, network.id, networkMember.id)).toThrowError(
         'Only leaders can remove other Network members',
       );
+    });
+  });
+
+  describe('POST /network/:networkID/invite', () => {
+    const { app, db } = setupIntegrationTest(NetworkController);
+
+    const request = (
+      accountID: string,
+      networkID: string,
+      data: CreateNetworkInvite,
+    ): Promise<Serialized<NetworkInvite>> =>
+      app()
+        .handle(
+          new MockRequest(`/network/${networkID}/invite`, {
+            method: 'post',
+            json: data,
+            headers: { 'test-principal': accountID },
+          }),
+        )
+        .then((res) => res.json());
+
+    test('create a network invite', async () => {
+      const { account } = await createAccount(db());
+      const network = await createNetwork(db(), account.id);
+
+      const result = await request(account.id, network.id, {});
+
+      expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
+      expect(await RedisPlugin.decorator.redis().hexists(NetworkService.NETWORK_INVITE, result.inviteID)).toBeTrue();
+    });
+  });
+
+  describe('POST /network/invite/:inviteID', () => {
+    const { app, db } = setupIntegrationTest(NetworkController);
+
+    const request = (accountID: string, inviteID: string): Promise<Serialized<Network> | null> =>
+      app()
+        .handle(
+          new MockRequest(`/network/invite/${inviteID}`, {
+            method: 'put',
+            headers: { 'test-principal': accountID },
+          }),
+        )
+        .then((res) => res.json());
+
+    test('accept a network invite', async () => {
+      const { account: invitedByAccount } = await createAccount(db());
+      const { account: invitedAccount } = await createAccount(db());
+      const network = await createNetwork(db(), invitedByAccount.id);
+      const { inviteID } = await new NetworkService(db(), RedisPlugin.decorator.redis()).createInvite(
+        network.id,
+        invitedByAccount.id,
+        {},
+      );
+
+      const result = await request(invitedAccount.id, inviteID);
+
+      expect(result).toEqual(serialize(network));
+      expect(
+        await db().$count(
+          NetworkMemberDB,
+          and(eq(NetworkMemberDB.accountID, invitedAccount.id), eq(NetworkMemberDB.networkID, network.id)),
+        ),
+      ).toBe(1);
+      expect(
+        await db().query.NetworkInviteRecordDB.findFirst({ where: eq(NetworkInviteRecordDB.networkID, network.id) }),
+      ).toEqual(
+        expect.objectContaining({
+          networkID: network.id,
+          invitedID: invitedAccount.id,
+          invitedBy: invitedByAccount.id,
+        }),
+      );
+      expect(await RedisPlugin.decorator.redis().hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();
     });
   });
 });

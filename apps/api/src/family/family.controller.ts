@@ -127,9 +127,7 @@ export const FamilyController = new Elysia({ prefix: '/family' })
       const membership = await assertMembership(params.familyID, principal.id);
       if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can invite other Family members');
 
-      const inviteID = await service.createInvite(params.familyID, body);
-
-      return { inviteID };
+      return service.createInvite(params.familyID, body);
     },
     {
       authenticated: true,

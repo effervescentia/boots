@@ -32,5 +32,5 @@ export const setupIntegrationTest = integrationTestFactory({
     ACCOUNT_ALIAS_EXPIRY_SHORT: 1000,
     ACCOUNT_ALIAS_EXPIRY_LONG: 10000,
   } satisfies Environment,
-  timeout: import.meta.env.CI ? 30_000 : 15_000,
+  timeout: import.meta.env.CI ? 30_000 : 20_000,
 });

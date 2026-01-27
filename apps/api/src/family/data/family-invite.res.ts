@@ -4,4 +4,5 @@ export type FamilyInvite = Static<typeof FamilyInviteResponse>;
 
 export const FamilyInviteResponse = t.Object({
   inviteID: t.String(),
+  expiresAt: t.Date(),
 });

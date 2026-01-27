@@ -321,7 +321,7 @@ describe('FamilyController', () => {
 
       const result = await request(account.id, family.id, {});
 
-      expect(result).toEqual({ inviteID: expect.any(String) });
+      expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
       expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, result.inviteID)).toBeTrue();
     });
   });
@@ -329,27 +329,31 @@ describe('FamilyController', () => {
   describe('POST /family/invite/:inviteID', () => {
     const { app, db } = setupIntegrationTest(FamilyController);
 
-    const request = (accountID: string, inviteID: string) =>
-      app().handle(
-        new MockRequest(`/family/invite/${inviteID}`, {
-          method: 'put',
-          headers: { 'test-principal': accountID },
-        }),
-      );
+    const request = (accountID: string, inviteID: string): Promise<Serialized<Family>> =>
+      app()
+        .handle(
+          new MockRequest(`/family/invite/${inviteID}`, {
+            method: 'put',
+            headers: { 'test-principal': accountID },
+          }),
+        )
+        .then((res) => res.json());
 
     test('accept a family invite', async () => {
-      const { account } = await createAccount(db());
-      const family = await createFamily(db(), account.id);
-      const inviteID = await new FamilyService(db(), RedisPlugin.decorator.redis()).createInvite(family.id, {
+      const { account: invitedByAccount } = await createAccount(db());
+      const { account: invitedAccount } = await createAccount(db());
+      const family = await createFamily(db(), invitedByAccount.id);
+      const { inviteID } = await new FamilyService(db(), RedisPlugin.decorator.redis()).createInvite(family.id, {
         role: FamilyRole.CHILD,
       });
 
-      await request(account.id, inviteID);
+      const result = await request(invitedAccount.id, inviteID);
 
+      expect(result).toEqual(serialize(family));
       expect(
         await db().$count(
           FamilyMemberDB,
-          and(eq(FamilyMemberDB.accountID, account.id), eq(FamilyMemberDB.familyID, family.id)),
+          and(eq(FamilyMemberDB.accountID, invitedAccount.id), eq(FamilyMemberDB.familyID, family.id)),
         ),
       ).toBe(1);
       expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();

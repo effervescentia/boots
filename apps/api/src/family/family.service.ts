@@ -1,17 +1,19 @@
-import { FAMILY_INVITE_TTL } from '@api/auth/auth.const';
 import { FamilyMemberDB } from '@api/db/db.schema';
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
 import { RedisService } from '@api/redis/redis.service';
 import { insertOne, updateOne } from '@bltx/db';
 import type { RedisClient } from 'bun';
+import { addSeconds } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
 import type { CreateFamily } from './data/create-family.req';
 import type { CreateFamilyInvite } from './data/create-family-invite.req';
 import { FamilyDB } from './data/family.db';
+import type { FamilyInvite } from './data/family-invite.res';
 import { FamilyInviteDataDTO } from './data/family-invite-data.dto';
 import { FamilyRole } from './data/family-role.enum';
 import type { PatchFamily } from './data/patch-family.req';
+import { FAMILY_INVITE_TTL } from './family.const';
 
 export class FamilyService extends DataService {
   public static readonly FAMILY_INVITE = 'family:invite';
@@ -61,7 +63,7 @@ export class FamilyService extends DataService {
     }
   }
 
-  async createInvite(familyID: string, data: CreateFamilyInvite) {
+  async createInvite(familyID: string, data: CreateFamilyInvite): Promise<FamilyInvite> {
     const inviteID = Bun.randomUUIDv7();
 
     await this.redis.setTypedHashField(
@@ -69,12 +71,13 @@ export class FamilyService extends DataService {
       FamilyService.FAMILY_INVITE,
       inviteID,
       { ...data, familyID },
-      {
-        ttl: FAMILY_INVITE_TTL,
-      },
+      { ttl: FAMILY_INVITE_TTL },
     );
 
-    return inviteID;
+    return {
+      inviteID,
+      expiresAt: addSeconds(new Date(), FAMILY_INVITE_TTL),
+    };
   }
 
   async acceptInvite(accountID: string, inviteID: string) {
