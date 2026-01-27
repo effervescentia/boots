@@ -77,6 +77,32 @@ describe('HeartbeatController', () => {
     });
   });
 
+  describe('PUT /heartbeat/:heartbeatID/ping', () => {
+    const { app, db } = setupIntegrationTest(HeartbeatController);
+
+    const request = (accountID: string, heartbeatID: string): Promise<Serialized<Heartbeat>> =>
+      app()
+        .handle(
+          new MockRequest(`/heartbeat/${heartbeatID}/ping`, {
+            method: 'put',
+            headers: setAuthPrincipal(accountID),
+          }),
+        )
+        .then(unwrap);
+
+    test('update a heartbeat', async () => {
+      const { account } = await createAccount(db());
+      const network = await createNetwork(db(), account.id);
+      const heartbeat = await new HeartbeatService(db()).create(account.id, {
+        alerts: [{ ttl: 400, networkID: network.id }],
+      });
+
+      const result = await request(account.id, heartbeat.id);
+
+      expect(new Date(result.updatedAt)).toBeAfter(heartbeat.updatedAt);
+    });
+  });
+
   describe('DELETE /heartbeat/:heartbeatID', () => {
     const { app, db } = setupIntegrationTest(HeartbeatController);
 

@@ -50,21 +50,19 @@ export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
     },
   )
 
-  .head(
-    '/:heartbeatID',
+  .put(
+    '/:heartbeatID/ping',
     async ({ db, params, principal }) => {
-      // const heartbeat = await db().query.HeartbeatDB.findFirst({
-      //   where: and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id)),
-      // });
-      const heartbeat = await updateOne(
-        db(),
-        HeartbeatDB,
-        and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id))!,
-        { updatedAt: new Date() },
-      );
-      if (!heartbeat) throw new HeartbeatNotFoundError(params.heartbeatID);
-
-      return heartbeat;
+      try {
+        return await updateOne(
+          db(),
+          HeartbeatDB,
+          and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id))!,
+          { updatedAt: new Date() },
+        );
+      } catch {
+        throw new HeartbeatNotFoundError(params.heartbeatID);
+      }
     },
     {
       authenticated: true,
