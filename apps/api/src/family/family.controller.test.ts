@@ -53,7 +53,7 @@ describe('FamilyController', () => {
         )
         .then((res) => res.json());
 
-    test('create a new family', async () => {
+    test('create a family', async () => {
       const data = { name: 'My Family' };
       const { account } = await createAccount(db());
 

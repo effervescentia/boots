@@ -3,6 +3,8 @@ export * from '@api/auth/data/auth-credential.db';
 export * from '@api/auth/data/auth-session.db';
 export * from '@api/family/data/family.db';
 export * from '@api/family/data/family-member.db';
+export * from '@api/heartbeat/data/heartbeat.db';
+export * from '@api/heartbeat/data/heartbeat-alert.db';
 export * from '@api/network/data/network.db';
 export * from '@api/network/data/network-audit-log.db';
 export * from '@api/network/data/network-member.db';

@@ -1,3 +1,4 @@
+import { HeartbeatController } from '@api/heartbeat/heartbeat.controller';
 import { AccountController } from '@api/account/account.controller';
 import { AuthController } from '@api/auth/auth.controller';
 import { FamilyController } from '@api/family/family.controller';
@@ -19,4 +20,5 @@ export const App = new Elysia()
   .use(AuthController)
   .use(AccountController)
   .use(FamilyController)
-  .use(NetworkController);
+  .use(NetworkController)
+  .use(HeartbeatController);

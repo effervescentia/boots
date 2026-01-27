@@ -1,3 +1,4 @@
+export type { Heartbeat } from '@api/heartbeat/data/heartbeat.dto';
 export type { Account } from '@api/account/data/account.dto';
 export type { AccountDetails } from '@api/account/data/account-details.dto';
 export type { AuthCredential } from '@api/auth/data/auth-credential.dto';

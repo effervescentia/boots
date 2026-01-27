@@ -3,7 +3,6 @@ import { AccountService } from '@api/account/account.service';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
 import type { DB } from '@api/db/db.types';
-import { NetworkRole } from '@api/lib';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
@@ -16,6 +15,7 @@ import type { Network } from './data/network.dto';
 import { NetworkAuditLogDB } from './data/network-audit-log.db';
 import type { NetworkInvite } from './data/network-invite.res';
 import { NetworkMemberDB } from './data/network-member.db';
+import { NetworkRole } from './data/network-role.enum';
 import type { PatchNetwork } from './data/patch-network.req';
 import { NetworkController } from './network.controller';
 import { NetworkService } from './network.service';
@@ -54,7 +54,7 @@ describe('NetworkController', () => {
         )
         .then((res) => res.json());
 
-    test('create a new network', async () => {
+    test('create a network', async () => {
       const data = { name: 'My Network' };
       const { account } = await createAccount(db());
 

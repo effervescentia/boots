@@ -1,5 +1,6 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
 import { FamilyMemberDB } from '@api/family/data/family-member.db';
+import { HeartbeatDB } from '@api/heartbeat/data/heartbeat.db';
 import { NetworkMemberDB } from '@api/network/data/network-member.db';
 import { id, timestamps } from '@bltx/db';
 import { relations } from 'drizzle-orm';
@@ -12,7 +13,8 @@ export const AccountDB = pgTable('account', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
-export const AccountRelations = relations(AccountDB, ({ many }) => ({
+export const AccountRelations = relations(AccountDB, ({ one, many }) => ({
+  heartbeat: one(HeartbeatDB),
   families: many(FamilyMemberDB),
   networks: many(NetworkMemberDB),
   credentials: many(AuthCredentialDB),
