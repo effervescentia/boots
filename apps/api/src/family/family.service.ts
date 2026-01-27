@@ -1,4 +1,3 @@
-import { FamilyMemberDB } from '@api/db/db.schema';
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
 import { RedisService } from '@api/redis/redis.service';
@@ -11,6 +10,7 @@ import type { CreateFamilyInvite } from './data/create-family-invite.req';
 import { FamilyDB } from './data/family.db';
 import type { FamilyInvite } from './data/family-invite.res';
 import { FamilyInviteDataDTO } from './data/family-invite-data.dto';
+import { FamilyMemberDB } from './data/family-member.db';
 import { FamilyRole } from './data/family-role.enum';
 import type { PatchFamily } from './data/patch-family.req';
 import { FAMILY_INVITE_TTL } from './family.const';

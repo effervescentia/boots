@@ -5,8 +5,8 @@ import { relations } from 'drizzle-orm';
 import { index, integer, pgTable, unique } from 'drizzle-orm/pg-core';
 import { HeartbeatDB } from './heartbeat.db';
 
-export const HeartbeatAlertDB = pgTable(
-  'heartbeat_alert',
+export const HeartbeatTriggerDB = pgTable(
+  'heartbeat_trigger',
   {
     heartbeatID: uuidV7('heartbeat_id')
       .references(() => HeartbeatDB.id, { onDelete: 'cascade' })
@@ -19,8 +19,8 @@ export const HeartbeatAlertDB = pgTable(
   (t) => [unique().on(t.heartbeatID, t.familyID, t.networkID), index().on(t.heartbeatID)],
 );
 
-export const HeartbeatAlertRelations = relations(HeartbeatAlertDB, ({ one }) => ({
-  heartbeat: one(HeartbeatDB, { fields: [HeartbeatAlertDB.heartbeatID], references: [HeartbeatDB.id] }),
-  family: one(FamilyDB, { fields: [HeartbeatAlertDB.familyID], references: [FamilyDB.id] }),
-  network: one(NetworkDB, { fields: [HeartbeatAlertDB.networkID], references: [NetworkDB.id] }),
+export const HeartbeatTriggerRelations = relations(HeartbeatTriggerDB, ({ one }) => ({
+  heartbeat: one(HeartbeatDB, { fields: [HeartbeatTriggerDB.heartbeatID], references: [HeartbeatDB.id] }),
+  family: one(FamilyDB, { fields: [HeartbeatTriggerDB.familyID], references: [FamilyDB.id] }),
+  network: one(NetworkDB, { fields: [HeartbeatTriggerDB.networkID], references: [NetworkDB.id] }),
 }));

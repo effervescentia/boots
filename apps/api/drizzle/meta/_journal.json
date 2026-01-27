@@ -36,6 +36,13 @@
       "when": 1769491049780,
       "tag": "0004_aberrant_secret_warriors",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769540061562,
+      "tag": "0005_lethal_mandroid",
+      "breakpoints": true
     }
   ]
 }

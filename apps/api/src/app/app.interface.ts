@@ -1,3 +1,4 @@
+export type { Alert } from '@api/alert/data/alert.dto';
 export type { Heartbeat } from '@api/heartbeat/data/heartbeat.dto';
 export type { Account } from '@api/account/data/account.dto';
 export type { AccountDetails } from '@api/account/data/account-details.dto';

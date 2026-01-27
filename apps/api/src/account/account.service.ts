@@ -1,8 +1,9 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
 import type { AuthCredential } from '@api/auth/data/auth-credential.dto';
 import type { CreateAuthCredential } from '@api/auth/data/create-auth-credential.interface';
-import { FamilyMemberDB, NetworkMemberDB } from '@api/db/db.schema';
+import { FamilyMemberDB } from '@api/family/data/family-member.db';
 import { DataService } from '@api/global/data.service';
+import { NetworkMemberDB } from '@api/network/data/network-member.db';
 import { insertOne, updateOne } from '@bltx/db';
 import { eq } from 'drizzle-orm';
 import { InternalServerError } from 'elysia';

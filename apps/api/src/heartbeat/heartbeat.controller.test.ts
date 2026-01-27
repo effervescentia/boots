@@ -13,7 +13,7 @@ import { eq } from 'drizzle-orm';
 import type { CreateHeartbeat } from './data/create-heartbeat.req';
 import { HeartbeatDB } from './data/heartbeat.db';
 import type { Heartbeat } from './data/heartbeat.dto';
-import { HeartbeatAlertDB } from './data/heartbeat-alert.db';
+import { HeartbeatTriggerDB } from './data/heartbeat-trigger.db';
 import { HeartbeatController } from './heartbeat.controller';
 import { HeartbeatService } from './heartbeat.service';
 
@@ -49,29 +49,29 @@ describe('HeartbeatController', () => {
       const { account } = await createAccount(db());
       const network = await createNetwork(db(), account.id);
 
-      const result = await request(account.id, { alerts: [{ ttl: 400, networkID: network.id }] });
+      const result = await request(account.id, { triggers: [{ ttl: 400, networkID: network.id }] });
 
       expect(result).toEqual(expect.objectContaining({ id: expect.any(String), accountID: account.id }));
       expect(serialize(await db().query.HeartbeatDB.findFirst({ where: eq(HeartbeatDB.id, result.id) }))).toEqual(
         result,
       );
-      expect(await db().query.HeartbeatAlertDB.findMany({ where: eq(HeartbeatAlertDB.networkID, network.id) })).toEqual(
-        [
-          expect.objectContaining({
-            networkID: network.id,
-            heartbeatID: result.id,
-            ttl: 400,
-          }),
-        ],
-      );
+      expect(
+        await db().query.HeartbeatTriggerDB.findMany({ where: eq(HeartbeatTriggerDB.networkID, network.id) }),
+      ).toEqual([
+        expect.objectContaining({
+          networkID: network.id,
+          heartbeatID: result.id,
+          ttl: 400,
+        }),
+      ]);
     });
 
     test('reject multiple heartbeats', async () => {
       const { account } = await createAccount(db());
       const network = await createNetwork(db(), account.id);
-      await new HeartbeatService(db()).create(account.id, { alerts: [{ ttl: 300, networkID: network.id }] });
+      await new HeartbeatService(db()).create(account.id, { triggers: [{ ttl: 300, networkID: network.id }] });
 
-      expect(() => request(account.id, { alerts: [{ ttl: 400, networkID: network.id }] })).toThrowError(
+      expect(() => request(account.id, { triggers: [{ ttl: 400, networkID: network.id }] })).toThrowError(
         'Each account can only have one Heartbeat configured',
       );
     });
@@ -94,7 +94,7 @@ describe('HeartbeatController', () => {
       const { account } = await createAccount(db());
       const network = await createNetwork(db(), account.id);
       const heartbeat = await new HeartbeatService(db()).create(account.id, {
-        alerts: [{ ttl: 400, networkID: network.id }],
+        triggers: [{ ttl: 400, networkID: network.id }],
       });
 
       const result = await request(account.id, heartbeat.id);
@@ -118,13 +118,13 @@ describe('HeartbeatController', () => {
       const { account } = await createAccount(db());
       const network = await createNetwork(db(), account.id);
       const heartbeat = await new HeartbeatService(db()).create(account.id, {
-        alerts: [{ ttl: 400, networkID: network.id }],
+        triggers: [{ ttl: 400, networkID: network.id }],
       });
 
       await request(account.id, heartbeat.id);
 
       expect(await db().$count(HeartbeatDB, eq(HeartbeatDB.id, heartbeat.id))).toBe(0);
-      expect(await db().$count(HeartbeatAlertDB, eq(HeartbeatAlertDB.heartbeatID, heartbeat.id))).toBe(0);
+      expect(await db().$count(HeartbeatTriggerDB, eq(HeartbeatTriggerDB.heartbeatID, heartbeat.id))).toBe(0);
     });
   });
 });

@@ -67,7 +67,6 @@ export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
     {
       authenticated: true,
       params: HeartbeatParams,
-      response: HeartbeatDTO,
     },
   )
 

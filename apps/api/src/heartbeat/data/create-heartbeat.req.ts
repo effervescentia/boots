@@ -13,7 +13,7 @@ const BaseAlert = t.Object({
 });
 
 export const CreateHeartbeatRequest = t.Object({
-  alerts: t.Array(
+  triggers: t.Array(
     t.Union([
       t.Composite([
         BaseAlert,

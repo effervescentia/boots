@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
+import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
-import { AuthCredentialDB } from '@api/db/db.schema';
 import type { DB } from '@api/db/db.types';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { setupIntegrationTest } from '@test/setup.util';

@@ -2,7 +2,7 @@ import { AccountDB } from '@api/account/data/account.db';
 import { id, timestamps, uuidV7 } from '@bltx/db';
 import { relations } from 'drizzle-orm';
 import { index, pgTable } from 'drizzle-orm/pg-core';
-import { HeartbeatAlertDB } from './heartbeat-alert.db';
+import { HeartbeatTriggerDB } from './heartbeat-trigger.db';
 
 export const HeartbeatDB = pgTable(
   'heartbeat',
@@ -19,5 +19,5 @@ export const HeartbeatDB = pgTable(
 
 export const HeartbeatRelations = relations(HeartbeatDB, ({ one, many }) => ({
   account: one(AccountDB, { fields: [HeartbeatDB.accountID], references: [AccountDB.id] }),
-  alerts: many(HeartbeatAlertDB),
+  triggers: many(HeartbeatTriggerDB),
 }));

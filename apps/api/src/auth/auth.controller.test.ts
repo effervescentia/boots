@@ -1,9 +1,9 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { AccountService } from '@api/account/account.service';
+import { AccountDB } from '@api/account/data/account.db';
 import type { Environment } from '@api/app/app.env';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
-import { AccountDB, AuthSessionDB } from '@api/db/db.schema';
 import type { DB } from '@api/db/db.types';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne } from '@bltx/db';
@@ -14,6 +14,7 @@ import { eq } from 'drizzle-orm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthSessionService } from './auth-session.service';
+import { AuthSessionDB } from './data/auth-session.db';
 import type { Authenticated } from './data/authenticated.res';
 import type { LoginChallenge } from './data/login-challenge.res';
 import type { NegotiateLogin } from './data/negotiate-login.req';

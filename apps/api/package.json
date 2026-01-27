@@ -16,6 +16,7 @@
     "@bltx/core": "1.6.0",
     "@bltx/db": "1.6.6",
     "@elysiajs/cors": "1.4.0",
+    "@elysiajs/cron": "1.4.1",
     "@elysiajs/jwt": "1.4.0",
     "@passwordless-id/webauthn": "2.3.1",
     "date-fns": "4.1.0",
