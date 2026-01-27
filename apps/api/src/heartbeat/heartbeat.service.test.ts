@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, setSystemTime, test } from 'bun:test';
 import { AccountService } from '@api/account/account.service';
-import { AlertDB } from '@api/alert/data/alert.db';
+import { AlertService } from '@api/alert/alert.service';
+import { AlertType } from '@api/alert/data/alert-type.enum';
 import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
 import { AuthTransport } from '@api/auth/data/auth-transport.enum';
 import type { DB } from '@api/db/db.types';
@@ -9,7 +10,6 @@ import { FamilyService } from '@api/family/family.service';
 import type { CreateNetwork } from '@api/network/data/create-network.req';
 import { NetworkService } from '@api/network/network.service';
 import { RedisPlugin } from '@api/redis/redis.plugin';
-import { insertOne } from '@bltx/db';
 import { setupIntegrationTest } from '@test/setup.util';
 import { addMinutes } from 'date-fns';
 import { eq } from 'drizzle-orm';
@@ -68,8 +68,9 @@ describe('HeartbeatService', () => {
           { networkID: network.id, ttl: TTL },
         ],
       });
-      const alert = await insertOne(db(), AlertDB, { networkID: network.id });
-      await insertOne(db(), HeartbeatExpiredAlertDB, { alertID: alert.id, heartbeatID: heartbeat.id });
+      await new AlertService(db()).create({ networkID: network.id }, AlertType.HEARTBEAT_EXPIRED, {
+        heartbeatID: heartbeat.id,
+      });
 
       setSystemTime(addMinutes(new Date(), TTL + 1));
 
@@ -94,8 +95,9 @@ describe('HeartbeatService', () => {
       const network = await createNetwork(db(), account.id);
       const service = new HeartbeatService(db());
       const heartbeat = await service.create(account.id, { triggers: [{ networkID: network.id, ttl: TTL }] });
-      const alert = await insertOne(db(), AlertDB, { networkID: network.id });
-      await insertOne(db(), HeartbeatExpiredAlertDB, { alertID: alert.id, heartbeatID: heartbeat.id });
+      await new AlertService(db()).create({ networkID: network.id }, AlertType.HEARTBEAT_EXPIRED, {
+        heartbeatID: heartbeat.id,
+      });
 
       setSystemTime(addMinutes(new Date(), TTL + 1));
 

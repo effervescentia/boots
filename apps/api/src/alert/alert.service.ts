@@ -2,13 +2,19 @@ import { DataService } from '@api/global/data.service';
 import { HeartbeatExpiredAlertDB } from '@api/heartbeat/data/heartbeat-expired-alert.db';
 import { insertOne } from '@bltx/db';
 import { eq, type InferInsertModel } from 'drizzle-orm';
+import { omit } from 'radashi';
+import { match, P } from 'ts-pattern';
 import { AlertDB } from './data/alert.db';
-import type { AlertDataDB } from './data/alert-data.interface';
+import type { AlertData, AlertDataDB } from './data/alert-data.interface';
 import { AlertType } from './data/alert-type.enum';
 
+type AlertTarget = { familyID: string } | { networkID: string };
+
 export class AlertService extends DataService {
+  private static readonly ALERTS: AlertType[] = Object.values(AlertType);
+
   async create(
-    target: { familyID: string } | { networkID: string },
+    target: AlertTarget,
     type: AlertType,
     data: Omit<InferInsertModel<AlertDataDB<typeof type>>, 'alertID'>,
   ) {
@@ -23,7 +29,31 @@ export class AlertService extends DataService {
     });
   }
 
-  async delete(alertID: string) {
-    await this.db.delete(AlertDB).where(eq(AlertDB.id, alertID));
+  async getMany(target: AlertTarget) {
+    const query = match(target)
+      .with({ familyID: P.select(P.string) }, (familyID) => eq(AlertDB.familyID, familyID))
+      .with({ networkID: P.select(P.string) }, (networkID) => eq(AlertDB.networkID, networkID))
+      .exhaustive();
+
+    return this.db.query.AlertDB.findMany({
+      where: query,
+      with: Object.fromEntries(AlertService.ALERTS.map((type) => [type, true])) as Record<AlertType, true>,
+    }).then((alerts) =>
+      alerts.map((alert) => {
+        let data: AlertData | null = null;
+
+        for (const type of AlertService.ALERTS) {
+          if (alert[type]) {
+            data = { ...alert[type], type };
+            break;
+          }
+        }
+
+        return {
+          ...omit(alert, AlertService.ALERTS),
+          data: data!,
+        };
+      }),
+    );
   }
 }
