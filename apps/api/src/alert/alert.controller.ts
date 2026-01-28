@@ -1,13 +1,19 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
 import { DatabasePlugin } from '@api/db/db.plugin';
-import { FamilyNotFoundError } from '@api/family/data/family-not-found.error';
 import { FamilyService } from '@api/family/family.service';
-import { NetworkNotFoundError } from '@api/network/data/network-not-found.error';
 import { NetworkService } from '@api/network/network.service';
 import { RedisPlugin } from '@api/redis/redis.plugin';
-import Elysia, { t } from 'elysia';
+import Elysia, { NotFoundError, t } from 'elysia';
 import { AlertService } from './alert.service';
 import { AlertDetailsDTO } from './data/alert-details.dto';
+
+const AlertParams = t.Object({ alertID: t.String({ format: 'uuid' }) });
+
+class AlertNotFoundError extends NotFoundError {
+  constructor(alertID: string) {
+    super(`No Alert exists with ID '${alertID}'`);
+  }
+}
 
 export const AlertController = new Elysia({ prefix: '/alert' })
   .use(DatabasePlugin)
@@ -20,10 +26,34 @@ export const AlertController = new Elysia({ prefix: '/alert' })
   }))
 
   .get(
+    '/:alertID',
+    async ({ service, familyService, networkService, params, principal }) => {
+      const alert = await service.getDetails(params.alertID);
+      if (!alert) throw new AlertNotFoundError(params.alertID);
+
+      try {
+        if (alert.familyID) {
+          await familyService.assertMembership(alert.familyID, principal.id);
+        } else if (alert.networkID) {
+          await networkService.assertMembership(alert.networkID, principal.id);
+        }
+      } catch {
+        throw new AlertNotFoundError(params.alertID);
+      }
+
+      return alert;
+    },
+    {
+      authenticated: true,
+      params: AlertParams,
+      response: AlertDetailsDTO,
+    },
+  )
+
+  .get(
     '/family/:familyID',
     async ({ service, familyService, params, principal }) => {
-      const membership = await familyService.getMembership(params.familyID, principal.id);
-      if (!membership) throw new FamilyNotFoundError(params.familyID);
+      await familyService.assertMembership(params.familyID, principal.id);
 
       return service.getMany({ familyID: params.familyID });
     },
@@ -37,8 +67,7 @@ export const AlertController = new Elysia({ prefix: '/alert' })
   .get(
     '/network/:networkID',
     async ({ service, networkService, params, principal }) => {
-      const membership = await networkService.getMembership(params.networkID, principal.id);
-      if (!membership) throw new NetworkNotFoundError(params.networkID);
+      await networkService.assertMembership(params.networkID, principal.id);
 
       return service.getMany({ networkID: params.networkID });
     },

@@ -11,6 +11,7 @@ import { FamilyDB } from './data/family.db';
 import type { FamilyInvite } from './data/family-invite.res';
 import { FamilyInviteDataDTO } from './data/family-invite-data.dto';
 import { FamilyMemberDB } from './data/family-member.db';
+import { FamilyNotFoundError } from './data/family-not-found.error';
 import { FamilyRole } from './data/family-role.enum';
 import type { PatchFamily } from './data/patch-family.req';
 import { FAMILY_INVITE_TTL } from './family.const';
@@ -49,6 +50,12 @@ export class FamilyService extends DataService {
       with: { family: true },
       columns: { role: true },
     });
+  }
+
+  async assertMembership(familyID: string, accountID: string) {
+    const membership = await this.getMembership(familyID, accountID);
+    if (!membership) throw new FamilyNotFoundError(familyID);
+    return membership;
   }
 
   async deleteMember(familyID: string, accountID: string) {

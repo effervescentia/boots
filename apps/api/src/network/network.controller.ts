@@ -11,7 +11,6 @@ import { NetworkDB } from './data/network.db';
 import { NetworkDTO } from './data/network.dto';
 import { NetworkInviteResponse } from './data/network-invite.res';
 import { NetworkMemberDB } from './data/network-member.db';
-import { NetworkNotFoundError } from './data/network-not-found.error';
 import { NetworkRole } from './data/network-role.enum';
 import { PatchNetworkRequest } from './data/patch-network.req';
 import { NetworkService } from './network.service';
@@ -23,19 +22,7 @@ export const NetworkController = new Elysia({ prefix: '/network' })
   .use(DatabasePlugin)
   .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db, redis }) => {
-    const service = new NetworkService(db(), redis());
-
-    return {
-      service,
-
-      assertMembership: async (networkID: string, accountID: string) => {
-        const membership = await service.getMembership(networkID, accountID);
-        if (!membership) throw new NetworkNotFoundError(networkID);
-        return membership;
-      },
-    };
-  })
+  .derive({ as: 'scoped' }, ({ db, redis }) => ({ service: new NetworkService(db(), redis()) }))
 
   .post(
     '/',
@@ -51,8 +38,8 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .get(
     '/:networkID',
-    async ({ assertMembership, params, principal }) => {
-      const membership = await assertMembership(params.networkID, principal.id);
+    async ({ service, params, principal }) => {
+      const membership = await service.assertMembership(params.networkID, principal.id);
 
       return membership.network;
     },
@@ -65,8 +52,8 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .patch(
     '/:networkID',
-    async ({ db, service, assertMembership, params, body, principal }) => {
-      const membership = await assertMembership(params.networkID, principal.id);
+    async ({ db, service, params, body, principal }) => {
+      const membership = await service.assertMembership(params.networkID, principal.id);
       const leaderCount = await db().$count(
         NetworkMemberDB,
         and(eq(NetworkMemberDB.networkID, params.networkID), eq(NetworkMemberDB.role, NetworkRole.LEADER)),
@@ -87,8 +74,8 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .delete(
     '/:networkID',
-    async ({ db, service, assertMembership, params, principal }) => {
-      await assertMembership(params.networkID, principal.id);
+    async ({ db, service, params, principal }) => {
+      await service.assertMembership(params.networkID, principal.id);
 
       const memberCount = await db().$count(NetworkMemberDB, eq(NetworkMemberDB.networkID, params.networkID));
       if (memberCount > 1) throw new ConflictError('Networks with more than one member cannot be deleted');
@@ -114,8 +101,8 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .delete(
     '/:networkID/member/:accountID',
-    async ({ service, assertMembership, params, principal }) => {
-      const membership = await assertMembership(params.networkID, principal.id);
+    async ({ service, params, principal }) => {
+      const membership = await service.assertMembership(params.networkID, principal.id);
       if (membership.role !== NetworkRole.LEADER) {
         throw new ForbiddenError('Only leaders can remove other Network members');
       }
@@ -130,8 +117,8 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .post(
     '/:networkID/invite',
-    async ({ service, assertMembership, params, body, principal }) => {
-      const membership = await assertMembership(params.networkID, principal.id);
+    async ({ service, params, body, principal }) => {
+      const membership = await service.assertMembership(params.networkID, principal.id);
       if (body.role === NetworkRole.LEADER && membership.role !== NetworkRole.LEADER) {
         throw new ForbiddenError('Only leaders can invite other leaders');
       }

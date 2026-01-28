@@ -9,7 +9,6 @@ import { CreateFamilyInviteRequest } from './data/create-family-invite.req';
 import { FamilyDB } from './data/family.db';
 import { FamilyDTO } from './data/family.dto';
 import { FamilyInviteResponse } from './data/family-invite.res';
-import { FamilyNotFoundError } from './data/family-not-found.error';
 import { FamilyRole } from './data/family-role.enum';
 import { PatchFamilyRequest } from './data/patch-family.req';
 import { FamilyService } from './family.service';
@@ -21,19 +20,7 @@ export const FamilyController = new Elysia({ prefix: '/family' })
   .use(DatabasePlugin)
   .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db, redis }) => {
-    const service = new FamilyService(db(), redis());
-
-    return {
-      service,
-
-      assertMembership: async (familyID: string, accountID: string) => {
-        const membership = await service.getMembership(familyID, accountID);
-        if (!membership) throw new FamilyNotFoundError(familyID);
-        return membership;
-      },
-    };
-  })
+  .derive({ as: 'scoped' }, ({ db, redis }) => ({ service: new FamilyService(db(), redis()) }))
 
   .post(
     '/',
@@ -49,8 +36,8 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .get(
     '/:familyID',
-    async ({ assertMembership, params, principal }) => {
-      const membership = await assertMembership(params.familyID, principal.id);
+    async ({ service, params, principal }) => {
+      const membership = await service.assertMembership(params.familyID, principal.id);
 
       return membership.family;
     },
@@ -63,8 +50,8 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .patch(
     '/:familyID',
-    async ({ service, assertMembership, params, body, principal }) => {
-      const membership = await assertMembership(params.familyID, principal.id);
+    async ({ service, params, body, principal }) => {
+      const membership = await service.assertMembership(params.familyID, principal.id);
       if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can update Family details');
 
       return service.patch(params.familyID, body);
@@ -79,8 +66,8 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .delete(
     '/:familyID',
-    async ({ service, assertMembership, params, principal }) => {
-      const membership = await assertMembership(params.familyID, principal.id);
+    async ({ service, params, principal }) => {
+      const membership = await service.assertMembership(params.familyID, principal.id);
       if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can delete a Family');
 
       await service.delete(params.familyID);
@@ -104,8 +91,8 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .delete(
     '/:familyID/member/:accountID',
-    async ({ service, assertMembership, params, principal }) => {
-      const membership = await assertMembership(params.familyID, principal.id);
+    async ({ service, params, principal }) => {
+      const membership = await service.assertMembership(params.familyID, principal.id);
       if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can remove other Family members');
 
       await service.deleteMember(params.familyID, params.accountID);
@@ -118,8 +105,8 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .post(
     '/:familyID/invite',
-    async ({ service, assertMembership, params, body, principal }) => {
-      const membership = await assertMembership(params.familyID, principal.id);
+    async ({ service, params, body, principal }) => {
+      const membership = await service.assertMembership(params.familyID, principal.id);
       if (membership.role !== FamilyRole.ADULT) throw new ForbiddenError('Only adults can invite other Family members');
 
       return service.createInvite(params.familyID, body);

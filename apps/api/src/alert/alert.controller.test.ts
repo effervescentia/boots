@@ -10,7 +10,7 @@ import type { CreateNetwork } from '@api/network/data/create-network.req';
 import { NetworkService } from '@api/network/network.service';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
-import { setAuthPrincipal } from '@test/request.util';
+import { setAuthPrincipal, unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { AlertController } from './alert.controller';
 import { AlertService } from './alert.service';
@@ -35,6 +35,39 @@ describe('AlertController', () => {
     return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
+  describe('GET /alert/:alertID', () => {
+    const { app, db } = setupIntegrationTest(AlertController);
+
+    const request = (accountID: string, alertID: string): Promise<Serialized<AlertDetails>> =>
+      app()
+        .handle(
+          new MockRequest(`/alert/${alertID}`, {
+            method: 'get',
+            headers: setAuthPrincipal(accountID),
+          }),
+        )
+        .then(unwrap);
+
+    test('get alert', async () => {
+      const service = new AlertService(db());
+      const { account } = await createAccount(db());
+      const family = await createFamily(db(), account.id);
+      const heartbeat = await new HeartbeatService(db()).create(account.id, {
+        triggers: [{ familyID: family.id, ttl: 100 }],
+      });
+      const alert = await service.create({ familyID: family.id }, AlertType.HEARTBEAT_EXPIRED, {
+        heartbeatID: heartbeat.id,
+      });
+
+      const result = await request(account.id, alert.id);
+
+      expect(result).toEqual({
+        ...serialize(alert),
+        data: expect.objectContaining({ type: AlertType.HEARTBEAT_EXPIRED, heartbeatID: heartbeat.id }),
+      });
+    });
+  });
+
   describe('GET /alert/family/:familyID', () => {
     const { app, db } = setupIntegrationTest(AlertController);
 
@@ -46,7 +79,7 @@ describe('AlertController', () => {
             headers: setAuthPrincipal(accountID),
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('get family alerts', async () => {
       const service = new AlertService(db());
@@ -86,7 +119,7 @@ describe('AlertController', () => {
             headers: setAuthPrincipal(accountID),
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('get network alerts', async () => {
       const service = new AlertService(db());

@@ -12,6 +12,7 @@ import { NetworkAuditLogDB } from './data/network-audit-log.db';
 import type { NetworkInvite } from './data/network-invite.res';
 import { NetworkInviteDataDTO } from './data/network-invite-data.dto';
 import { NetworkMemberDB } from './data/network-member.db';
+import { NetworkNotFoundError } from './data/network-not-found.error';
 import type { PatchNetwork } from './data/patch-network.req';
 import { NETWORK_INVITE_TTL } from './network.const';
 
@@ -49,6 +50,12 @@ export class NetworkService extends DataService {
       with: { network: true },
       columns: { role: true },
     });
+  }
+
+  async assertMembership(networkID: string, accountID: string) {
+    const membership = await this.getMembership(networkID, accountID);
+    if (!membership) throw new NetworkNotFoundError(networkID);
+    return membership;
   }
 
   async deleteMember(networkID: string, accountID: string) {
