@@ -10,3 +10,4 @@ export * from '@api/heartbeat/data/heartbeat-trigger.db';
 export * from '@api/network/data/network.db';
 export * from '@api/network/data/network-audit-log.db';
 export * from '@api/network/data/network-member.db';
+export * from '@api/notify/data/notify-android.db';
