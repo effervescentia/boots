@@ -22,6 +22,10 @@ export const EnvironmentDTO = t.Object({
   ACCOUNT_MAX_ALIASES: t.Number(),
   ACCOUNT_ALIAS_EXPIRY_SHORT: DurationDTO,
   ACCOUNT_ALIAS_EXPIRY_LONG: DurationDTO,
+
+  GOOGLE_APPLICATION_CREDENTIALS: t.String(),
+
+  FIREBASE_NOTIFICATION_DATABASE_URL: t.String(),
 });
 
 export type Environment = Static<typeof EnvironmentDTO>;

@@ -1,10 +1,10 @@
-import { AlertController } from '@api/alert/alert.controller';
-import { HeartbeatController } from '@api/heartbeat/heartbeat.controller';
 import { AccountController } from '@api/account/account.controller';
+import { AlertController } from '@api/alert/alert.controller';
 import { AuthController } from '@api/auth/auth.controller';
 import { FamilyController } from '@api/family/family.controller';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { HealthController } from '@api/health/health.controller';
+import { HeartbeatController } from '@api/heartbeat/heartbeat.controller';
 import { NetworkController } from '@api/network/network.controller';
 import { cors } from '@elysiajs/cors';
 import Elysia from 'elysia';

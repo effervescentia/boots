@@ -1,5 +1,8 @@
+import type { DB } from '@api/db/db.types';
+import type { FirebaseClient } from '@api/firebase/firebase.client';
 import { DataService } from '@api/global/data.service';
 import { HeartbeatExpiredAlertDB } from '@api/heartbeat/data/heartbeat-expired-alert.db';
+import { NotifyService } from '@api/notify/notify.service';
 import { insertOne } from '@bltx/db';
 import { eq, type InferInsertModel } from 'drizzle-orm';
 import { omit } from 'radashi';
@@ -30,12 +33,19 @@ export class AlertService extends DataService {
     };
   }
 
+  constructor(
+    db: DB,
+    private readonly firebase: FirebaseClient,
+  ) {
+    super(db);
+  }
+
   async create(
     target: AlertTarget,
     type: AlertType,
     data: Omit<InferInsertModel<AlertDataDB<typeof type>>, 'alertID'>,
   ) {
-    return this.transaction(async (tx) => {
+    const alert = await this.transaction(async (tx) => {
       const alert = await insertOne(tx, AlertDB, target);
 
       if (type === AlertType.HEARTBEAT_EXPIRED) {
@@ -44,6 +54,15 @@ export class AlertService extends DataService {
 
       return alert;
     });
+
+    const topic = match(target)
+      .with({ familyID: P.select(P.string) }, (familyID) => `family:${familyID}`)
+      .with({ networkID: P.select(P.string) }, (networkID) => `network:${networkID}`)
+      .exhaustive();
+
+    await new NotifyService(this.firebase).sendAlert(topic, alert);
+
+    return alert;
   }
 
   async getDetails(alertID: string) {
