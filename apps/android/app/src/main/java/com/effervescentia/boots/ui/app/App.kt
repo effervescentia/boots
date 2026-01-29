@@ -2,6 +2,8 @@ package com.effervescentia.boots.ui.app
 
 import android.Manifest
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,30 +22,29 @@ object HeartbeatPage
 @Serializable
 object HeartbeatPermissionPage
 
-data class AppContext(
-  val navController: NavHostController,
-)
+val LocalNav = staticCompositionLocalOf<NavHostController?> { null }
 
 @Composable
 fun App() {
-  val navController = rememberNavController()
-  val ctx = AppContext(navController)
+  val nav = rememberNavController()
 
-  NavHost(navController, startDestination = HomePage) {
-    composable<HomePage> { Home(ctx) }
-    composable<HeartbeatPage> { Heartbeat(ctx) }
-    composable<HeartbeatPermissionPage> {
-      PermissionGate(
-        permission = Manifest.permission.POST_NOTIFICATIONS,
-        callback = { result ->
-          result
-            .onSuccess { navController.navigate(HeartbeatPage) }
-            .onFailure {
-              println("Failed to get permissions")
-              navController.popBackStack()
-            }
-        }
-      )
+  CompositionLocalProvider(LocalNav provides nav) {
+    NavHost(nav, startDestination = HomePage) {
+      composable<HomePage> { Home() }
+      composable<HeartbeatPage> { Heartbeat() }
+      composable<HeartbeatPermissionPage> {
+        PermissionGate(
+          permission = Manifest.permission.POST_NOTIFICATIONS,
+          callback = { result ->
+            result
+              .onSuccess { nav.navigate(HeartbeatPage) }
+              .onFailure {
+                println("Failed to get permissions")
+                nav.popBackStack()
+              }
+          }
+        )
+      }
     }
   }
 }

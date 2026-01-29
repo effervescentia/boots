@@ -4,6 +4,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class FirebaseService : FirebaseMessagingService() {
+
   override fun onNewToken(token: String) {
     super.onNewToken(token)
   }
@@ -11,4 +12,5 @@ class FirebaseService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     super.onMessageReceived(message)
   }
+
 }

@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun AddHeartbeatButton(onClick: () -> Unit) {
-    Button(onClick = onClick) {
-        Text("Add Heartbeat")
-    }
+  Button(onClick = onClick) {
+    Text("Add Heartbeat")
+  }
 }
