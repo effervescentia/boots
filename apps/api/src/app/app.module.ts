@@ -6,6 +6,7 @@ import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { HealthController } from '@api/health/health.controller';
 import { HeartbeatController } from '@api/heartbeat/heartbeat.controller';
 import { NetworkController } from '@api/network/network.controller';
+import { NotifyController } from '@api/notify/notify.controller';
 import { cors } from '@elysiajs/cors';
 import Elysia from 'elysia';
 
@@ -23,4 +24,5 @@ export const App = new Elysia()
   .use(FamilyController)
   .use(NetworkController)
   .use(HeartbeatController)
-  .use(AlertController);
+  .use(AlertController)
+  .use(NotifyController);

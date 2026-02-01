@@ -5,6 +5,6 @@ export class NotifyService {
   constructor(private readonly firebase: FirebaseClient) {}
 
   async sendAlert(topic: string, alert: Alert) {
-    await this.firebase.sendMessage(topic, { type: 'alert', data: alert });
+    await this.firebase.sendMessage(topic, { type: 'alert', data: JSON.stringify(alert) });
   }
 }

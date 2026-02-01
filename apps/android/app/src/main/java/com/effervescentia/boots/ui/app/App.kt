@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.effervescentia.boots.ui.gate.PermissionGate
+import com.effervescentia.boots.ui.page.auth.Signup
 import com.effervescentia.boots.ui.page.heartbeat.Heartbeat
 import com.effervescentia.boots.ui.page.home.Home
 import kotlinx.serialization.Serializable
@@ -21,6 +22,9 @@ object HeartbeatPage
 
 @Serializable
 object HeartbeatPermissionPage
+
+@Serializable
+object SignupPage
 
 val LocalNav = staticCompositionLocalOf<NavHostController?> { null }
 
@@ -45,6 +49,7 @@ fun App() {
           }
         )
       }
+      composable<SignupPage> { Signup() }
     }
   }
 }

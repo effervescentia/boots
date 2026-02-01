@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/component: job
     {{- include "boots-api.labels" . | nindent 4 }}
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "*/10 * * * *"
   concurrencyPolicy: Replace
   jobTemplate:
     metadata:
