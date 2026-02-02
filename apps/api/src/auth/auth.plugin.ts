@@ -1,5 +1,5 @@
 import type { Account } from '@api/account/data/account.dto';
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { eq } from 'drizzle-orm';
 import Elysia, { type CookieOptions, t } from 'elysia';
@@ -27,14 +27,14 @@ export const AuthPlugin = new Elysia({ name: 'plugin.auth' })
           };
         }
 
-        const sessionService = new AuthSessionService(DatabasePlugin.decorator.db(), EnvironmentPlugin.decorator.env());
+        const sessionService = new AuthSessionService(DatabaseGlobal.client, EnvironmentPlugin.decorator.env());
         try {
           if (typeof accessToken.value !== 'string') return status(401);
 
           const tokenData = await sessionService.accessToken.verify(accessToken.value);
           if (!tokenData) return status(401);
 
-          const session = await DatabasePlugin.decorator.db().query.AuthSessionDB.findFirst({
+          const session = await DatabaseGlobal.client.query.AuthSessionDB.findFirst({
             where: eq(AuthSessionDB.id, tokenData.sessionID),
             with: { credential: { with: { account: true }, columns: {} } },
             columns: {},

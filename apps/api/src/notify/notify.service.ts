@@ -1,8 +1,8 @@
 import type { Alert } from '@api/alert/data/alert.dto';
-import type { FirebaseClient } from '@api/firebase/firebase.client';
+import { FirebaseGlobal } from '@api/firebase/firebase.global';
 
 export class NotifyService {
-  constructor(private readonly firebase: FirebaseClient) {}
+  private readonly firebase = FirebaseGlobal.client;
 
   async sendAlert(topic: string, alert: Alert) {
     await this.firebase.sendMessage(topic, { type: 'alert', data: JSON.stringify(alert) });

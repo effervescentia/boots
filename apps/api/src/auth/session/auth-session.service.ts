@@ -15,7 +15,7 @@ export class AuthSessionService extends DataService {
     return jwt({ secret, schema: AccessToken, exp: '10m' }).decorator.jwt;
   }
 
-  public readonly accessToken: ReturnType<typeof AuthSessionService.createAccessToken>;
+  readonly accessToken: ReturnType<typeof AuthSessionService.createAccessToken>;
 
   constructor(
     db: DB,

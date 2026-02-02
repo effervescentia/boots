@@ -2,11 +2,9 @@ import { describe, expect, test } from 'bun:test';
 import type { DB } from '@api/db/db.types';
 import type { CreateFamily } from '@api/family/data/create-family.req';
 import { FamilyService } from '@api/family/family.service';
-import { FirebasePlugin } from '@api/firebase/firebase.plugin';
 import { HeartbeatService } from '@api/heartbeat/heartbeat.service';
 import type { CreateNetwork } from '@api/network/data/create-network.req';
 import { NetworkService } from '@api/network/network.service';
-import { RedisPlugin } from '@api/redis/redis.plugin';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { setAuthPrincipal, unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
@@ -17,11 +15,11 @@ import { AlertType } from './data/alert-type.enum';
 
 describe('AlertController', () => {
   const createFamily = (db: DB, accountID: string, { name = 'My Family', ...data }: Partial<CreateFamily> = {}) => {
-    return new FamilyService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
+    return new FamilyService(db).create(accountID, { name, ...data });
   };
 
   const createNetwork = (db: DB, accountID: string, { name = 'My Network', ...data }: Partial<CreateNetwork> = {}) => {
-    return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
+    return new NetworkService(db).create(accountID, { name, ...data });
   };
 
   describe('GET /alert/:alertID', () => {
@@ -38,10 +36,10 @@ describe('AlertController', () => {
         .then(unwrap);
 
     test('get alert', async () => {
-      const service = new AlertService(db(), FirebasePlugin.decorator.firebase());
+      const service = new AlertService(db());
       const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
-      const heartbeat = await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
+      const heartbeat = await new HeartbeatService(db()).create(account.id, {
         triggers: [{ familyID: family.id, ttl: 100 }],
       });
       const alert = await service.create({ familyID: family.id }, AlertType.HEARTBEAT_EXPIRED, {
@@ -71,11 +69,11 @@ describe('AlertController', () => {
         .then(unwrap);
 
     test('get family alerts', async () => {
-      const service = new AlertService(db(), FirebasePlugin.decorator.firebase());
+      const service = new AlertService(db());
       const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       const network = await createNetwork(db(), account.id);
-      const heartbeat = await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
+      const heartbeat = await new HeartbeatService(db()).create(account.id, {
         triggers: [
           { networkID: network.id, ttl: 100 },
           { familyID: family.id, ttl: 100 },
@@ -111,11 +109,11 @@ describe('AlertController', () => {
         .then(unwrap);
 
     test('get network alerts', async () => {
-      const service = new AlertService(db(), FirebasePlugin.decorator.firebase());
+      const service = new AlertService(db());
       const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       const network = await createNetwork(db(), account.id);
-      const heartbeat = await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
+      const heartbeat = await new HeartbeatService(db()).create(account.id, {
         triggers: [
           { networkID: network.id, ttl: 100 },
           { familyID: family.id, ttl: 100 },

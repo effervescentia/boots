@@ -1,8 +1,6 @@
 import { AlertService } from '@api/alert/alert.service';
 import { AlertDB } from '@api/alert/data/alert.db';
 import { AlertType } from '@api/alert/data/alert-type.enum';
-import type { DB } from '@api/db/db.types';
-import type { FirebaseClient } from '@api/firebase/firebase.client';
 import { ConflictError } from '@api/global/conflict.error';
 import { DataService } from '@api/global/data.service';
 import { insertOne } from '@bltx/db';
@@ -14,13 +12,6 @@ import { HeartbeatExpiredAlertDB } from './data/heartbeat-expired-alert.db';
 import { HeartbeatTriggerDB } from './data/heartbeat-trigger.db';
 
 export class HeartbeatService extends DataService {
-  constructor(
-    db: DB,
-    private readonly firebase: FirebaseClient,
-  ) {
-    super(db);
-  }
-
   async create(accountID: string, data: CreateHeartbeat) {
     const heartbeatCount = await this.db.$count(HeartbeatDB, eq(HeartbeatDB.accountID, accountID));
     if (heartbeatCount) throw new ConflictError('Each account can only have one Heartbeat configured');
@@ -65,7 +56,7 @@ export class HeartbeatService extends DataService {
         ),
       );
 
-    const alertService = new AlertService(this.db, this.firebase);
+    const alertService = new AlertService(this.db);
 
     for (const trigger of triggers) {
       const target = match(trigger)

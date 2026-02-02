@@ -1,4 +1,3 @@
-import type { RedisClient } from 'bun';
 import type { Static, TSchema } from 'elysia';
 import { TypeCompiler } from 'elysia/type-system';
 
@@ -11,7 +10,7 @@ export interface GetOptions {
 }
 
 export class RedisService {
-  constructor(public readonly client: RedisClient) {}
+  constructor(public readonly client: Bun.RedisClient) {}
 
   setHashField(hashKey: string, key: string, value: string, { ttl }: SetOptions = {}) {
     if (typeof ttl === 'number') {

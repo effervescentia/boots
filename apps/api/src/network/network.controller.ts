@@ -1,8 +1,7 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { ConflictError } from '@api/global/conflict.error';
 import { ForbiddenError } from '@api/global/forbidden.error';
-import { RedisPlugin } from '@api/redis/redis.plugin';
 import { and, eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { CreateNetworkRequest } from './data/create-network.req';
@@ -19,10 +18,8 @@ const NetworkParams = t.Object({ networkID: t.String({ format: 'uuid' }) });
 const NetworkMemberParams = t.Composite([NetworkParams, t.Object({ accountID: t.String({ format: 'uuid' }) })]);
 
 export const NetworkController = new Elysia({ prefix: '/network' })
-  .use(DatabasePlugin)
-  .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db, redis }) => ({ service: new NetworkService(db(), redis()) }))
+  .derive({ as: 'scoped' }, () => ({ service: new NetworkService(DatabaseGlobal.client) }))
 
   .post(
     '/',
@@ -52,9 +49,9 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .patch(
     '/:networkID',
-    async ({ db, service, params, body, principal }) => {
+    async ({ service, params, body, principal }) => {
       const membership = await service.assertMembership(params.networkID, principal.id);
-      const leaderCount = await db().$count(
+      const leaderCount = await DatabaseGlobal.client.$count(
         NetworkMemberDB,
         and(eq(NetworkMemberDB.networkID, params.networkID), eq(NetworkMemberDB.role, NetworkRole.LEADER)),
       );
@@ -74,10 +71,13 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .delete(
     '/:networkID',
-    async ({ db, service, params, principal }) => {
+    async ({ service, params, principal }) => {
       await service.assertMembership(params.networkID, principal.id);
 
-      const memberCount = await db().$count(NetworkMemberDB, eq(NetworkMemberDB.networkID, params.networkID));
+      const memberCount = await DatabaseGlobal.client.$count(
+        NetworkMemberDB,
+        eq(NetworkMemberDB.networkID, params.networkID),
+      );
       if (memberCount > 1) throw new ConflictError('Networks with more than one member cannot be deleted');
 
       await service.delete(params.networkID);
@@ -135,11 +135,11 @@ export const NetworkController = new Elysia({ prefix: '/network' })
 
   .put(
     '/invite/:inviteID',
-    async ({ db, service, params, principal }) => {
+    async ({ service, params, principal }) => {
       try {
         const networkID = await service.acceptInvite(principal.id, params.inviteID);
 
-        return (await db().query.NetworkDB.findFirst({ where: eq(NetworkDB.id, networkID) })) ?? null;
+        return (await DatabaseGlobal.client.query.NetworkDB.findFirst({ where: eq(NetworkDB.id, networkID) })) ?? null;
       } catch {
         throw new NotFoundError();
       }

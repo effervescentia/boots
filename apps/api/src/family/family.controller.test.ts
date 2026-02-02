@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
-import { RedisPlugin } from '@api/redis/redis.plugin';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { FixtureService } from '@test/fixture.service';
@@ -20,7 +20,7 @@ import { FamilyService } from './family.service';
 
 describe('FamilyController', () => {
   const createFamily = (db: DB, accountID: string, { name = 'My Family', ...data }: Partial<CreateFamily> = {}) => {
-    return new FamilyService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
+    return new FamilyService(db).create(accountID, { name, ...data });
   };
 
   const createFamilyMember = async (db: DB, familyID: string) => {
@@ -312,9 +312,7 @@ describe('FamilyController', () => {
       const result = await request(account.id, family.id, {});
 
       expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
-      expect(
-        await RedisPlugin.decorator.redis().client.hexists(FamilyService.FAMILY_INVITE, result.inviteID),
-      ).toBeTrue();
+      expect(await RedisGlobal.service.client.hexists(FamilyService.FAMILY_INVITE, result.inviteID)).toBeTrue();
     });
   });
 
@@ -335,7 +333,7 @@ describe('FamilyController', () => {
       const { account: invitedByAccount } = await fixture().createAccount();
       const { account: invitedAccount } = await fixture().createAccount();
       const family = await createFamily(db(), invitedByAccount.id);
-      const { inviteID } = await new FamilyService(db(), RedisPlugin.decorator.redis()).createInvite(family.id, {
+      const { inviteID } = await new FamilyService(db()).createInvite(family.id, {
         role: FamilyRole.CHILD,
       });
 
@@ -348,7 +346,7 @@ describe('FamilyController', () => {
           and(eq(FamilyMemberDB.accountID, invitedAccount.id), eq(FamilyMemberDB.familyID, family.id)),
         ),
       ).toBe(1);
-      expect(await RedisPlugin.decorator.redis().client.hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();
+      expect(await RedisGlobal.service.client.hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();
     });
   });
 });

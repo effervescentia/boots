@@ -2,19 +2,16 @@ import { AccountService } from '@api/account/account.service';
 import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
-import type { RedisService } from '@api/redis/redis.service';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
-import { server as webauthn } from '@passwordless-id/webauthn';
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
-import { eq, type InferInsertModel } from 'drizzle-orm';
+import type { InferInsertModel } from 'drizzle-orm';
 import { NotFoundError } from 'elysia';
-import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
+import { SIGNUP_TTL } from '../auth.const';
 import { AuthCredentialDB } from '../data/auth-credential.db';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { AuthTransport } from '../data/auth-transport.enum';
 import type { VerifyPasskeySignup } from '../data/verify-passkey-signup.req';
-import type { NegotiateWebLogin } from '../web/data/negotiate-web-login.req';
-import type { VerifyWebLogin } from '../web/data/verify-web-login.req';
 import { AndroidChallengeDetailsDTO } from './data/android-challenge-details.dto';
 import { AuthAndroidCredentialDB } from './data/auth-android-credential.db';
 import type { AuthDeviceType } from './data/auth-device-type.enum';
@@ -23,14 +20,14 @@ const RP_ID = 'boots.localhost';
 const RP_NAME = 'Boots 4 Good';
 
 export class AuthAndroidService extends DataService {
-  public static readonly SIGNUP_CHALLENGE = 'auth:android:signup:challenge';
-  public static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
+  static readonly SIGNUP_CHALLENGE = 'auth:android:signup:challenge';
+  static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
 
+  private readonly redis = RedisGlobal.service;
   private readonly account = new AccountService(this.db);
 
   constructor(
     db: DB,
-    private readonly redis: RedisService,
     private readonly env: Environment,
   ) {
     super(db);
@@ -87,7 +84,7 @@ export class AuthAndroidService extends DataService {
 
     const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
     const { account } = await this.account.create((tx, accountID) =>
-      new AuthAndroidService(tx, this.redis, this.env).createCredential(accountID, {
+      new AuthAndroidService(tx, this.env).createCredential(accountID, {
         credentialID: credential.id,
         webAuthnUserID: challenge.webAuthnUserID,
         publicKey: credential.publicKey,

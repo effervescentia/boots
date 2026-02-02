@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
-import { RedisPlugin } from '@api/redis/redis.plugin';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { FixtureService } from '@test/fixture.service';
@@ -21,7 +21,7 @@ import { NetworkService } from './network.service';
 
 describe('NetworkController', () => {
   const createNetwork = (db: DB, accountID: string, { name = 'My Network', ...data }: Partial<CreateNetwork> = {}) => {
-    return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
+    return new NetworkService(db).create(accountID, { name, ...data });
   };
 
   const createNetworkMember = async (db: DB, networkID: string, role?: NetworkRole) => {
@@ -318,9 +318,7 @@ describe('NetworkController', () => {
       const result = await request(account.id, network.id, {});
 
       expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
-      expect(
-        await RedisPlugin.decorator.redis().client.hexists(NetworkService.NETWORK_INVITE, result.inviteID),
-      ).toBeTrue();
+      expect(await RedisGlobal.service.client.hexists(NetworkService.NETWORK_INVITE, result.inviteID)).toBeTrue();
     });
   });
 
@@ -341,11 +339,7 @@ describe('NetworkController', () => {
       const { account: invitedByAccount } = await fixture().createAccount();
       const { account: invitedAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), invitedByAccount.id);
-      const { inviteID } = await new NetworkService(db(), RedisPlugin.decorator.redis()).createInvite(
-        network.id,
-        invitedByAccount.id,
-        {},
-      );
+      const { inviteID } = await new NetworkService(db()).createInvite(network.id, invitedByAccount.id, {});
 
       const result = await request(invitedAccount.id, inviteID);
 
@@ -368,7 +362,7 @@ describe('NetworkController', () => {
           },
         }),
       );
-      expect(await RedisPlugin.decorator.redis().client.hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();
+      expect(await RedisGlobal.service.client.hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();
     });
   });
 });

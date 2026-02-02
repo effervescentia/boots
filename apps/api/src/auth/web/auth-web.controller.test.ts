@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { AccountDB } from '@api/account/data/account.db';
 import type { Environment } from '@api/app/app.env';
-import { RedisPlugin } from '@api/redis/redis.plugin';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { MockRequest, type Serialized } from '@bltx/test';
 import { parseSetCookie } from '@test/cookie.util';
 import { setupIntegrationTest } from '@test/setup.util';
@@ -44,9 +44,7 @@ describe('AuthWebController', () => {
       expect(result).toEqual({ challenge: expect.any(String) });
       expect(cookies).toEqual(expect.objectContaining({ signupRequestID: expect.any(String) }));
       expect(
-        await RedisPlugin.decorator
-          .redis()
-          .client.hexists(AuthWebService.SIGNUP_CHALLENGE, cookies['signupRequestID']!),
+        await RedisGlobal.service.client.hexists(AuthWebService.SIGNUP_CHALLENGE, cookies['signupRequestID']!),
       ).toBeTrue();
     });
   });
@@ -83,11 +81,7 @@ describe('AuthWebController', () => {
           clientExtensionResults: {},
         },
       };
-      const { requestID } = await new AuthWebService(
-        db(),
-        RedisPlugin.decorator.redis(),
-        ENVIRONMENT,
-      ).negotiateSignup();
+      const { requestID } = await new AuthWebService(db(), ENVIRONMENT).negotiateSignup();
 
       verifyRegistration.mockResolvedValue({
         synced: true,
@@ -117,9 +111,7 @@ describe('AuthWebController', () => {
       expect(cookies).toEqual(expect.objectContaining({ accessToken: expect.any(String) }));
       expect(await db().$count(AccountDB, eq(AccountDB.id, result.account.id))).toBe(1);
       expect(
-        await RedisPlugin.decorator
-          .redis()
-          .client.hexists(AuthWebService.SIGNUP_CHALLENGE, cookies['signupRequestID']!),
+        await RedisGlobal.service.client.hexists(AuthWebService.SIGNUP_CHALLENGE, cookies['signupRequestID']!),
       ).toBeFalse();
     });
   });
@@ -143,7 +135,7 @@ describe('AuthWebController', () => {
       expect(result).toEqual({ challenge: expect.any(String) });
       expect(cookies).toEqual(expect.objectContaining({ loginRequestID: expect.any(String) }));
       expect(
-        await RedisPlugin.decorator.redis().client.hexists(AuthWebService.LOGIN_CHALLENGE, cookies['loginRequestID']!),
+        await RedisGlobal.service.client.hexists(AuthWebService.LOGIN_CHALLENGE, cookies['loginRequestID']!),
       ).toBeTrue();
     });
   });
@@ -177,9 +169,7 @@ describe('AuthWebController', () => {
           clientExtensionResults: {},
         },
       };
-      const { requestID } = await new AuthWebService(db(), RedisPlugin.decorator.redis(), ENVIRONMENT).negotiateLogin(
-        {},
-      );
+      const { requestID } = await new AuthWebService(db(), ENVIRONMENT).negotiateLogin({});
 
       verifyAuthentication.mockResolvedValue({ userVerified: true });
 
@@ -199,7 +189,7 @@ describe('AuthWebController', () => {
       expect(await db().$count(AccountDB, eq(AccountDB.id, result.account.id))).toBe(1);
       expect(await db().$count(AuthSessionDB, eq(AuthSessionDB.credentialID, credential.id))).toBe(1);
       expect(
-        await RedisPlugin.decorator.redis().client.hexists(AuthWebService.LOGIN_CHALLENGE, cookies['loginRequestID']!),
+        await RedisGlobal.service.client.hexists(AuthWebService.LOGIN_CHALLENGE, cookies['loginRequestID']!),
       ).toBeFalse();
     });
   });

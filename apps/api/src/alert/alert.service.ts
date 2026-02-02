@@ -1,5 +1,3 @@
-import type { DB } from '@api/db/db.types';
-import type { FirebaseClient } from '@api/firebase/firebase.client';
 import { DataService } from '@api/global/data.service';
 import { HeartbeatExpiredAlertDB } from '@api/heartbeat/data/heartbeat-expired-alert.db';
 import { NotifyService } from '@api/notify/notify.service';
@@ -33,13 +31,6 @@ export class AlertService extends DataService {
     };
   }
 
-  constructor(
-    db: DB,
-    private readonly firebase: FirebaseClient,
-  ) {
-    super(db);
-  }
-
   async create(
     target: AlertTarget,
     type: AlertType,
@@ -60,7 +51,7 @@ export class AlertService extends DataService {
       .with({ networkID: P.select(P.string) }, (networkID) => `network:${networkID}`)
       .exhaustive();
 
-    await new NotifyService(this.firebase).sendAlert(topic, alert);
+    await new NotifyService().sendAlert(topic, alert);
 
     return alert;
   }

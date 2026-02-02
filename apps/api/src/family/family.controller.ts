@@ -1,7 +1,6 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { ForbiddenError } from '@api/global/forbidden.error';
-import { RedisPlugin } from '@api/redis/redis.plugin';
 import { eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { CreateFamilyRequest } from './data/create-family.req';
@@ -17,10 +16,8 @@ const FamilyParams = t.Object({ familyID: t.String({ format: 'uuid' }) });
 const FamilyMemberParams = t.Composite([FamilyParams, t.Object({ accountID: t.String({ format: 'uuid' }) })]);
 
 export const FamilyController = new Elysia({ prefix: '/family' })
-  .use(DatabasePlugin)
-  .use(RedisPlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db, redis }) => ({ service: new FamilyService(db(), redis()) }))
+  .derive({ as: 'scoped' }, () => ({ service: new FamilyService(DatabaseGlobal.client) }))
 
   .post(
     '/',
@@ -121,11 +118,11 @@ export const FamilyController = new Elysia({ prefix: '/family' })
 
   .put(
     '/invite/:inviteID',
-    async ({ db, service, params, principal }) => {
+    async ({ service, params, principal }) => {
       try {
         const familyID = await service.acceptInvite(principal.id, params.inviteID);
 
-        return (await db().query.FamilyDB.findFirst({ where: eq(FamilyDB.id, familyID) })) ?? null;
+        return (await DatabaseGlobal.client.query.FamilyDB.findFirst({ where: eq(FamilyDB.id, familyID) })) ?? null;
       } catch {
         throw new NotFoundError();
       }

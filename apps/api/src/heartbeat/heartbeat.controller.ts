@@ -1,6 +1,5 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
-import { DatabasePlugin } from '@api/db/db.plugin';
-import { FirebasePlugin } from '@api/firebase/firebase.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { updateOne } from '@bltx/db';
 import { and, eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
@@ -18,10 +17,8 @@ class HeartbeatNotFoundError extends NotFoundError {
 }
 
 export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
-  .use(DatabasePlugin)
-  .use(FirebasePlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db, firebase }) => ({ service: new HeartbeatService(db(), firebase()) }))
+  .derive({ as: 'scoped' }, () => ({ service: new HeartbeatService(DatabaseGlobal.client) }))
 
   .post(
     '/',
@@ -37,8 +34,8 @@ export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
 
   .get(
     '/:heartbeatID',
-    async ({ db, params, principal }) => {
-      const heartbeat = await db().query.HeartbeatDB.findFirst({
+    async ({ params, principal }) => {
+      const heartbeat = await DatabaseGlobal.client.query.HeartbeatDB.findFirst({
         where: and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id)),
       });
       if (!heartbeat) throw new HeartbeatNotFoundError(params.heartbeatID);
@@ -54,10 +51,10 @@ export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
 
   .put(
     '/:heartbeatID/ping',
-    async ({ db, params, principal }) => {
+    async ({ params, principal }) => {
       try {
         return await updateOne(
-          db(),
+          DatabaseGlobal.client,
           HeartbeatDB,
           and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id))!,
           { updatedAt: new Date() },
@@ -74,8 +71,8 @@ export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
 
   .delete(
     '/:heartbeatID',
-    async ({ db, params, principal }) => {
-      await db()
+    async ({ params, principal }) => {
+      await DatabaseGlobal.client
         .delete(HeartbeatDB)
         .where(and(eq(HeartbeatDB.id, params.heartbeatID), eq(HeartbeatDB.accountID, principal.id)));
     },

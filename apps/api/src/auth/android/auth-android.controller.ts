@@ -1,6 +1,5 @@
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
-import { RedisPlugin } from '@api/redis/redis.plugin';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
@@ -10,13 +9,11 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { AuthAndroidService } from './auth-android.service';
 import { AndroidChallengeResponse } from './data/android-challenge.res';
 
-export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
-  .use(DatabasePlugin)
-  .use(RedisPlugin)
+export const AuthAndroidController = new Elysia({ prefix: '/android' })
   .use(EnvironmentPlugin)
-  .derive({ as: 'scoped' }, ({ db, redis, env }) => ({
-    service: new AuthAndroidService(db(), redis(), env()),
-    sessionService: new AuthSessionService(db(), env()),
+  .derive({ as: 'scoped' }, ({ env }) => ({
+    service: new AuthAndroidService(DatabaseGlobal.client, env()),
+    sessionService: new AuthSessionService(DatabaseGlobal.client, env()),
   }))
 
   .post(

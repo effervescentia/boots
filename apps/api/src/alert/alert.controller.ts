@@ -1,9 +1,7 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import { FamilyService } from '@api/family/family.service';
-import { FirebasePlugin } from '@api/firebase/firebase.plugin';
 import { NetworkService } from '@api/network/network.service';
-import { RedisPlugin } from '@api/redis/redis.plugin';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { AlertService } from './alert.service';
 import { AlertDetailsDTO } from './data/alert-details.dto';
@@ -17,14 +15,11 @@ class AlertNotFoundError extends NotFoundError {
 }
 
 export const AlertController = new Elysia({ prefix: '/alert' })
-  .use(DatabasePlugin)
-  .use(RedisPlugin)
   .use(AuthPlugin)
-  .use(FirebasePlugin)
-  .derive({ as: 'scoped' }, ({ db, redis, firebase }) => ({
-    service: new AlertService(db(), firebase()),
-    familyService: new FamilyService(db(), redis()),
-    networkService: new NetworkService(db(), redis()),
+  .derive({ as: 'scoped' }, () => ({
+    service: new AlertService(DatabaseGlobal.client),
+    familyService: new FamilyService(DatabaseGlobal.client),
+    networkService: new NetworkService(DatabaseGlobal.client),
   }))
 
   .get(

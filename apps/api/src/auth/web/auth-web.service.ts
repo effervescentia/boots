@@ -2,7 +2,7 @@ import { AccountService } from '@api/account/account.service';
 import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
-import type { RedisService } from '@api/redis/redis.service';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
 import { server as webauthn } from '@passwordless-id/webauthn';
 import { eq, type InferInsertModel } from 'drizzle-orm';
@@ -18,14 +18,14 @@ import type { NegotiateWebLogin } from './data/negotiate-web-login.req';
 import type { VerifyWebLogin } from './data/verify-web-login.req';
 
 export class AuthWebService extends DataService {
-  public static readonly SIGNUP_CHALLENGE = 'auth:web:signup:challenge';
-  public static readonly LOGIN_CHALLENGE = 'auth:web:login:challenge';
+  static readonly SIGNUP_CHALLENGE = 'auth:web:signup:challenge';
+  static readonly LOGIN_CHALLENGE = 'auth:web:login:challenge';
 
+  private readonly redis = RedisGlobal.service;
   private readonly account = new AccountService(this.db);
 
   constructor(
     db: DB,
-    private readonly redis: RedisService,
     private readonly env: Environment,
   ) {
     super(db);
@@ -56,7 +56,7 @@ export class AuthWebService extends DataService {
 
     const { credential } = result;
     const { account } = await this.account.create((tx, accountID) =>
-      new AuthWebService(tx, this.redis, this.env).createCredential(accountID, {
+      new AuthWebService(tx, this.env).createCredential(accountID, {
         credentialID: credential.id,
         publicKey: credential.publicKey,
         algorithm: credential.algorithm as AuthAlgorithm,

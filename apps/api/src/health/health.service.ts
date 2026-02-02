@@ -1,13 +1,12 @@
 import type { DB } from '@api/db/db.types';
-import type { RedisService } from '@api/redis/redis.service';
+import { RedisGlobal } from '@api/redis/redis.global';
 import { sql } from 'drizzle-orm';
 import { NotFoundError } from 'elysia';
 
 export class HealthService {
-  constructor(
-    private readonly db: DB,
-    private readonly redis: RedisService,
-  ) {}
+  private readonly redis = RedisGlobal.service;
+
+  constructor(private readonly db: DB) {}
 
   async assertReady() {
     if (!this.db) throw new NotFoundError('database client not found');

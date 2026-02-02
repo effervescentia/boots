@@ -1,13 +1,12 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
-import { DatabasePlugin } from '@api/db/db.plugin';
+import { DatabaseGlobal } from '@api/db/db.global';
 import Elysia, { InternalServerError } from 'elysia';
 import { AccountService } from './account.service';
 import { AccountDetailsDTO } from './data/account-details.dto';
 
 export const AccountController = new Elysia({ prefix: '/account' })
-  .use(DatabasePlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db }) => ({ service: new AccountService(db()) }))
+  .derive({ as: 'scoped' }, () => ({ service: new AccountService(DatabaseGlobal.client) }))
 
   .get(
     '/self',
