@@ -10,7 +10,7 @@ import { NegotiateWebLoginRequest } from './data/negotiate-web-login.req';
 import { VerifyWebLoginRequest } from './data/verify-web-login.req';
 import { WebChallengeResponse } from './data/web-challenge.res';
 
-export const AuthWebController = new Elysia({ prefix: '/web' })
+export const AuthWebController = new Elysia({ prefix: '/auth/web' })
   .derive({ as: 'scoped' }, () => ({
     service: new AuthWebService(DatabaseGlobal.client),
     sessionService: new AuthSessionService(DatabaseGlobal.client),

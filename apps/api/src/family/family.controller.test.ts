@@ -4,6 +4,7 @@ import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { FixtureService } from '@test/fixture.service';
+import { unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateFamily } from './data/create-family.req';
@@ -40,7 +41,7 @@ describe('FamilyController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('create a family', async () => {
       const data = { name: 'My Family' };
@@ -76,11 +77,7 @@ describe('FamilyController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then(async (res) => {
-          if (res.ok) return res.json();
-
-          throw new Error(await res.text());
-        });
+        .then(unwrap);
 
     test('get family details', async () => {
       const { account } = await fixture().createAccount();
@@ -112,11 +109,7 @@ describe('FamilyController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then(async (res) => {
-          if (res.ok) return res.json();
-
-          throw new Error(await res.text());
-        });
+        .then(unwrap);
 
     test('update family details', async () => {
       const data = { name: 'The Tans' };
@@ -302,7 +295,7 @@ describe('FamilyController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('create a family invite', async () => {
       const { account } = await fixture().createAccount();
@@ -326,7 +319,7 @@ describe('FamilyController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('accept a family invite', async () => {
       const { account: invitedByAccount } = await fixture().createAccount();

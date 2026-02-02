@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { AuthCredentialDB } from '@api/db/db.schema';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
+import { unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { eq } from 'drizzle-orm';
 import { AccountController } from './account.controller';
@@ -19,7 +20,7 @@ describe('AccountController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('get own account', async () => {
       const { account } = await fixture().createAccount();

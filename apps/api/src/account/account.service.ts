@@ -1,5 +1,4 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
-import { AuthWebCredentialDB } from '@api/auth/web/data/auth-web-credential.db';
 import type { DB } from '@api/db/db.types';
 import { FamilyMemberDB } from '@api/family/data/family-member.db';
 import { DataService } from '@api/global/data.service';
@@ -89,6 +88,6 @@ export class AccountService extends DataService {
     await updateOne(this.db, AccountDB, eq(AccountDB.id, accountID), { deletedAt: new Date() });
     await this.db.delete(FamilyMemberDB).where(eq(FamilyMemberDB.accountID, accountID));
     await this.db.delete(NetworkMemberDB).where(eq(NetworkMemberDB.accountID, accountID));
-    await this.db.delete(AuthWebCredentialDB).where(eq(AuthCredentialDB.accountID, accountID));
+    await this.db.delete(AuthCredentialDB).where(eq(AuthCredentialDB.accountID, accountID));
   }
 }

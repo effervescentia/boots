@@ -4,6 +4,7 @@ import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
 import { FixtureService } from '@test/fixture.service';
+import { unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateNetwork } from './data/create-network.req';
@@ -41,7 +42,7 @@ describe('NetworkController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('create a network', async () => {
       const data = { name: 'My Network' };
@@ -77,11 +78,7 @@ describe('NetworkController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then(async (res) => {
-          if (res.ok) return res.json();
-
-          throw new Error(await res.text());
-        });
+        .then(unwrap);
 
     test('get network details', async () => {
       const { account } = await fixture().createAccount();
@@ -113,11 +110,7 @@ describe('NetworkController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then(async (res) => {
-          if (res.ok) return res.json();
-
-          throw new Error(await res.text());
-        });
+        .then(unwrap);
 
     test('update network details', async () => {
       const data = { name: 'The Tans' };
@@ -308,7 +301,7 @@ describe('NetworkController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('create a network invite', async () => {
       const { account } = await fixture().createAccount();
@@ -332,7 +325,7 @@ describe('NetworkController', () => {
             headers: { 'test-principal': accountID },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('accept a network invite', async () => {
       const { account: invitedByAccount } = await fixture().createAccount();

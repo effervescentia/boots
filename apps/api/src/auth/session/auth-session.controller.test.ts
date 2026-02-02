@@ -1,7 +1,8 @@
-import { describe, expect, mock, test } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import type { Environment } from '@api/app/app.env';
 import { insertOne } from '@bltx/db';
 import { MockRequest, type Serialized } from '@bltx/test';
+import { unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { eq } from 'drizzle-orm';
 import { AuthSessionDB } from '../data/auth-session.db';
@@ -9,17 +10,13 @@ import type { Authenticated } from '../data/authenticated.res';
 import { AuthSessionController } from './auth-session.controller';
 import { AuthSessionService } from './auth-session.service';
 
-mock.module('@/env/env.global', () => ({
-  EnvironmentGlobal: {
-    data: {
-      JWT_AUTH_SECRET: 'secret',
-    } as Environment,
-  },
-}));
+const ENVIRONMENT: Partial<Environment> = {
+  JWT_AUTH_SECRET: 'secret',
+};
 
 describe('AuthSessionController', () => {
   describe('GET /auth/session', () => {
-    const { app, db, fixture } = setupIntegrationTest(AuthSessionController);
+    const { app, db, fixture } = setupIntegrationTest(AuthSessionController, { env: ENVIRONMENT });
 
     const request = (accessToken: string): Promise<Serialized<Authenticated>> =>
       app()
@@ -31,7 +28,7 @@ describe('AuthSessionController', () => {
             },
           }),
         )
-        .then((res) => res.json());
+        .then(unwrap);
 
     test('get active session', async () => {
       const { account, credential } = await fixture().createAccount();
@@ -54,7 +51,7 @@ describe('AuthSessionController', () => {
   });
 
   describe('DELETE /auth/session', () => {
-    const { app, db, fixture } = setupIntegrationTest(AuthSessionController);
+    const { app, db, fixture } = setupIntegrationTest(AuthSessionController, { env: ENVIRONMENT });
 
     const request = (accessToken: string) =>
       app().handle(

@@ -4,7 +4,7 @@ import Elysia, { NotFoundError, t } from 'elysia';
 import { AuthenticatedResponse } from '../data/authenticated.res';
 import { AuthSessionService } from './auth-session.service';
 
-export const AuthSessionController = new Elysia({ prefix: '/session' })
+export const AuthSessionController = new Elysia({ prefix: '/auth/session' })
   .derive({ as: 'scoped' }, () => ({
     service: new AuthSessionService(DatabaseGlobal.client),
     accountService: new AccountService(DatabaseGlobal.client),

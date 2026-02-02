@@ -4,16 +4,21 @@ import type { Environment } from '@api/app/app.env';
 import { RedisGlobal } from '@api/redis/redis.global';
 import { MockRequest, type Serialized } from '@bltx/test';
 import { parseSetCookie } from '@test/cookie.util';
+import { unwrap } from '@test/request.util';
 import { setupIntegrationTest } from '@test/setup.util';
 import { eq } from 'drizzle-orm';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { Authenticated } from '../data/authenticated.res';
 import type { VerifyPasskeySignup } from '../data/verify-passkey-signup.req';
-import { AuthSessionController } from '../session/auth-session.controller';
+import { AuthWebController } from './auth-web.controller';
 import { AuthWebService } from './auth-web.service';
 import type { NegotiateWebLogin } from './data/negotiate-web-login.req';
 import type { VerifyWebLogin } from './data/verify-web-login.req';
 import type { WebChallenge } from './data/web-challenge.res';
+
+const ENVIRONMENT: Partial<Environment> = {
+  JWT_AUTH_SECRET: 'secret',
+};
 
 const verifyRegistration = mock();
 const verifyAuthentication = mock();
@@ -26,23 +31,15 @@ mock.module('@passwordless-id/webauthn', () => ({
   },
 }));
 
-mock.module('@/env/env.global', () => ({
-  EnvironmentGlobal: {
-    data: {
-      JWT_AUTH_SECRET: 'secret',
-    } as Environment,
-  },
-}));
-
 describe('AuthWebController', () => {
   describe('POST /auth/web/signup/negotiate', () => {
-    const { app } = setupIntegrationTest(AuthSessionController);
+    const { app } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
     const request = () => app().handle(new MockRequest('/auth/web/signup/negotiate', { method: 'post' }));
 
     test('negotiate a signup', async () => {
       const response = await request();
-      const result: Serialized<WebChallenge> = await response.json();
+      const result: Serialized<WebChallenge> = await unwrap(response);
       const cookies = parseSetCookie(response.headers);
 
       expect(result).toEqual({ challenge: expect.any(String) });
@@ -54,7 +51,7 @@ describe('AuthWebController', () => {
   });
 
   describe('POST /auth/web/signup/verify', () => {
-    const { app, db } = setupIntegrationTest(AuthSessionController);
+    const { app, db } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
     const request = (signupRequestID: string, data: VerifyPasskeySignup) =>
       app().handle(
@@ -101,7 +98,7 @@ describe('AuthWebController', () => {
       });
 
       const response = await request(requestID, data);
-      const result: Serialized<Authenticated> = await response.json();
+      const result: Serialized<Authenticated> = await unwrap(response);
       const cookies = parseSetCookie(response.headers);
 
       expect(result).toEqual({
@@ -121,7 +118,7 @@ describe('AuthWebController', () => {
   });
 
   describe('POST /auth/web/login/negotiate', () => {
-    const { app } = setupIntegrationTest(AuthSessionController);
+    const { app } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
     const request = (data: NegotiateWebLogin) =>
       app().handle(
@@ -133,7 +130,7 @@ describe('AuthWebController', () => {
 
     test('negotiate a login', async () => {
       const response = await request({});
-      const result: Serialized<WebChallenge> = await response.json();
+      const result: Serialized<WebChallenge> = await unwrap(response);
       const cookies = parseSetCookie(response.headers);
 
       expect(result).toEqual({ challenge: expect.any(String) });
@@ -145,7 +142,7 @@ describe('AuthWebController', () => {
   });
 
   describe('POST /auth/web/login/verify', () => {
-    const { app, db, fixture } = setupIntegrationTest(AuthSessionController);
+    const { app, db, fixture } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
     const request = (loginRequestID: string, data: VerifyWebLogin) =>
       app().handle(
@@ -178,7 +175,7 @@ describe('AuthWebController', () => {
       verifyAuthentication.mockResolvedValue({ userVerified: true });
 
       const response = await request(requestID, data);
-      const result: Serialized<Authenticated> = await response.json();
+      const result: Serialized<Authenticated> = await unwrap(response);
       const cookies = parseSetCookie(response.headers);
 
       expect(result).toEqual({

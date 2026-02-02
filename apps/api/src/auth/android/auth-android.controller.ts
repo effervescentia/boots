@@ -8,7 +8,7 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { AuthAndroidService } from './auth-android.service';
 import { AndroidChallengeResponse } from './data/android-challenge.res';
 
-export const AuthAndroidController = new Elysia({ prefix: '/android' })
+export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
   .derive({ as: 'scoped' }, () => ({
     service: new AuthAndroidService(DatabaseGlobal.client),
     sessionService: new AuthSessionService(DatabaseGlobal.client),
