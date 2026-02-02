@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'bun:test';
-import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
@@ -25,7 +24,7 @@ describe('NetworkController', () => {
   };
 
   const createNetworkMember = async (db: DB, networkID: string, role?: NetworkRole) => {
-    const { account } = await new FixtureService(db, {} as Environment).createAccount();
+    const { account } = await new FixtureService(db).createAccount();
     await insertOne(db, NetworkMemberDB, { networkID, role, accountID: account.id });
     return { account };
   };

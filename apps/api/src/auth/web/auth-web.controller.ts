@@ -1,5 +1,4 @@
 import { DatabaseGlobal } from '@api/db/db.global';
-import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
@@ -12,10 +11,9 @@ import { VerifyWebLoginRequest } from './data/verify-web-login.req';
 import { WebChallengeResponse } from './data/web-challenge.res';
 
 export const AuthWebController = new Elysia({ prefix: '/web' })
-  .use(EnvironmentPlugin)
-  .derive({ as: 'scoped' }, ({ env }) => ({
-    service: new AuthWebService(DatabaseGlobal.client, env()),
-    sessionService: new AuthSessionService(DatabaseGlobal.client, env()),
+  .derive({ as: 'scoped' }, () => ({
+    service: new AuthWebService(DatabaseGlobal.client),
+    sessionService: new AuthSessionService(DatabaseGlobal.client),
   }))
 
   .post(

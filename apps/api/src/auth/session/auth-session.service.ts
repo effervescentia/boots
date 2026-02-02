@@ -1,5 +1,4 @@
-import type { Environment } from '@api/app/app.env';
-import type { DB } from '@api/db/db.types';
+import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
 import jwt from '@elysiajs/jwt';
 import { eq } from 'drizzle-orm';
@@ -15,16 +14,8 @@ export class AuthSessionService extends DataService {
     return jwt({ secret, schema: AccessToken, exp: '10m' }).decorator.jwt;
   }
 
-  readonly accessToken: ReturnType<typeof AuthSessionService.createAccessToken>;
-
-  constructor(
-    db: DB,
-    private readonly env: Environment,
-  ) {
-    super(db);
-
-    this.accessToken = AuthSessionService.createAccessToken(this.env.JWT_AUTH_SECRET);
-  }
+  private readonly env = EnvironmentGlobal.data;
+  readonly accessToken = AuthSessionService.createAccessToken(this.env.JWT_AUTH_SECRET);
 
   async get(sessionID: number) {
     return this.db.query.AuthSessionDB.findFirst({

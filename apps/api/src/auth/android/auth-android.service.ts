@@ -1,6 +1,5 @@
 import { AccountService } from '@api/account/account.service';
-import type { Environment } from '@api/app/app.env';
-import type { DB } from '@api/db/db.types';
+import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
 import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
@@ -24,14 +23,8 @@ export class AuthAndroidService extends DataService {
   static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
 
   private readonly redis = RedisGlobal.service;
+  private readonly env = EnvironmentGlobal.data;
   private readonly account = new AccountService(this.db);
-
-  constructor(
-    db: DB,
-    private readonly env: Environment,
-  ) {
-    super(db);
-  }
 
   private async createCredential(accountID: string, data: InferInsertModel<typeof AuthAndroidCredentialDB>) {
     const credential = await insertOne(this.db, AuthCredentialDB, { accountID, id: data.credentialID });
@@ -84,7 +77,7 @@ export class AuthAndroidService extends DataService {
 
     const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
     const { account } = await this.account.create((tx, accountID) =>
-      new AuthAndroidService(tx, this.env).createCredential(accountID, {
+      new AuthAndroidService(tx).createCredential(accountID, {
         credentialID: credential.id,
         webAuthnUserID: challenge.webAuthnUserID,
         publicKey: credential.publicKey,

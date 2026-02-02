@@ -26,9 +26,13 @@ mock.module('@passwordless-id/webauthn', () => ({
   },
 }));
 
-const ENVIRONMENT = {
-  JWT_AUTH_SECRET: 'secret',
-} as Environment;
+mock.module('@/env/env.global', () => ({
+  EnvironmentGlobal: {
+    data: {
+      JWT_AUTH_SECRET: 'secret',
+    } as Environment,
+  },
+}));
 
 describe('AuthWebController', () => {
   describe('POST /auth/web/signup/negotiate', () => {
@@ -81,7 +85,7 @@ describe('AuthWebController', () => {
           clientExtensionResults: {},
         },
       };
-      const { requestID } = await new AuthWebService(db(), ENVIRONMENT).negotiateSignup();
+      const { requestID } = await new AuthWebService(db()).negotiateSignup();
 
       verifyRegistration.mockResolvedValue({
         synced: true,
@@ -169,7 +173,7 @@ describe('AuthWebController', () => {
           clientExtensionResults: {},
         },
       };
-      const { requestID } = await new AuthWebService(db(), ENVIRONMENT).negotiateLogin({});
+      const { requestID } = await new AuthWebService(db()).negotiateLogin({});
 
       verifyAuthentication.mockResolvedValue({ userVerified: true });
 

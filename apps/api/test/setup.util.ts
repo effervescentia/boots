@@ -45,6 +45,6 @@ export const setupIntegrationTest = (controller: AnyElysia, options?: Integratio
 
   return {
     ...helpers,
-    fixture: () => new FixtureService(helpers.db(), helpers.env() as Environment),
+    fixture: () => new FixtureService(helpers.db()),
   };
 };

@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'bun:test';
-import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
@@ -24,7 +23,7 @@ describe('FamilyController', () => {
   };
 
   const createFamilyMember = async (db: DB, familyID: string) => {
-    const { account } = await new FixtureService(db, {} as Environment).createAccount();
+    const { account } = await new FixtureService(db).createAccount();
     await insertOne(db, FamilyMemberDB, { familyID, accountID: account.id, role: FamilyRole.ADULT });
     return { account };
   };

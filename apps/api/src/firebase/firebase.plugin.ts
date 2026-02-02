@@ -1,9 +1,8 @@
-import { EnvironmentPlugin } from '@api/global/environment.plugin';
+import { EnvironmentGlobal } from '@api/env/env.global';
 import Elysia from 'elysia';
-import { FirebaseClient } from './firebase.client';
+import { FirebaseGlobal } from './firebase.global';
 
-export const FirebasePlugin = new Elysia({ name: 'plugin.firebase' }).use((app) => {
-  const firebase = new FirebaseClient(EnvironmentPlugin.decorator.env());
-
-  return app.derive({ as: 'scoped' }, () => ({ firebase: () => firebase }));
+export const FirebasePlugin = new Elysia({ name: 'plugin.firebase' }).use(async (app) => {
+  FirebaseGlobal.init(EnvironmentGlobal.data);
+  return app;
 });

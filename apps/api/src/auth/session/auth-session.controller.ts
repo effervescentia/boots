@@ -1,14 +1,12 @@
 import { AccountService } from '@api/account/account.service';
 import { DatabaseGlobal } from '@api/db/db.global';
-import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import Elysia, { NotFoundError, t } from 'elysia';
 import { AuthenticatedResponse } from '../data/authenticated.res';
 import { AuthSessionService } from './auth-session.service';
 
 export const AuthSessionController = new Elysia({ prefix: '/session' })
-  .use(EnvironmentPlugin)
-  .derive({ as: 'scoped' }, ({ env }) => ({
-    service: new AuthSessionService(DatabaseGlobal.client, env()),
+  .derive({ as: 'scoped' }, () => ({
+    service: new AuthSessionService(DatabaseGlobal.client),
     accountService: new AccountService(DatabaseGlobal.client),
   }))
 

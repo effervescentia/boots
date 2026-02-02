@@ -1,30 +1,26 @@
-import { EnvironmentPlugin } from '@api/global/environment.plugin';
+import { EnvironmentGlobal } from '@api/env/env.global';
 import { RedisContainer } from '@testcontainers/redis';
 import Elysia from 'elysia';
+import { RedisGlobal } from './redis.global';
 import { RedisService } from './redis.service';
 
 export const RedisPlugin = new Elysia({ name: 'plugin.redis' }).use((app) => {
-  if (import.meta.env.NODE_ENV === 'test') {
-    let redis: RedisService;
+  // if (import.meta.env.NODE_ENV === 'test') {
+  //   let redis: RedisService;
 
-    return app.decorate({ redis: () => redis }).use(async (app) => {
-      const container = await new RedisContainer('redis:latest').start();
+  //   return app.decorate({ redis: () => redis }).use(async (app) => {
+  //     const container = await new RedisContainer('redis:latest').start();
 
-      redis = new RedisService(new Bun.RedisClient(`redis://${container.getHost()}:${container.getPort()}`));
+  //     redis = new RedisService(new Bun.RedisClient(`redis://${container.getHost()}:${container.getPort()}`));
 
-      await redis.client.connect();
+  //     await redis.client.connect();
 
-      return app;
-    });
-  }
+  //     return app;
+  //   });
+  // }
 
-  const env = EnvironmentPlugin.decorator.env();
-  const redis = new RedisService(
-    new Bun.RedisClient(`redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOSTNAME}:${env.REDIS_PORT}`),
-  );
-
-  return app.decorate({ redis: () => redis }).use(async (app) => {
-    await app.decorator.redis().client.connect();
+  return app.use(async (app) => {
+    await RedisGlobal.init(EnvironmentGlobal.data);
     return app;
   });
 });

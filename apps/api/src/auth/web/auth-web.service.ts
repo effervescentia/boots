@@ -1,6 +1,5 @@
 import { AccountService } from '@api/account/account.service';
-import type { Environment } from '@api/app/app.env';
-import type { DB } from '@api/db/db.types';
+import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
 import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
@@ -21,15 +20,9 @@ export class AuthWebService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:web:signup:challenge';
   static readonly LOGIN_CHALLENGE = 'auth:web:login:challenge';
 
+  private readonly env = EnvironmentGlobal.data;
   private readonly redis = RedisGlobal.service;
   private readonly account = new AccountService(this.db);
-
-  constructor(
-    db: DB,
-    private readonly env: Environment,
-  ) {
-    super(db);
-  }
 
   async createCredential(accountID: string, data: InferInsertModel<typeof AuthWebCredentialDB>) {
     const credential = await insertOne(this.db, AuthCredentialDB, { accountID, id: data.credentialID });
@@ -50,13 +43,16 @@ export class AuthWebService extends DataService {
     const challenge = await this.redis.getHashField(AuthWebService.SIGNUP_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
-    const result = await webauthn.verifyRegistration(registration, { origin: this.env.WEB_ORIGIN, challenge });
+    const result = await webauthn.verifyRegistration(registration, {
+      origin: this.env.WEB_ORIGIN,
+      challenge,
+    });
 
     if (!result.userVerified) throw new NotFoundError();
 
     const { credential } = result;
     const { account } = await this.account.create((tx, accountID) =>
-      new AuthWebService(tx, this.env).createCredential(accountID, {
+      new AuthWebService(tx).createCredential(accountID, {
         credentialID: credential.id,
         publicKey: credential.publicKey,
         algorithm: credential.algorithm as AuthAlgorithm,

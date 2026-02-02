@@ -1,6 +1,5 @@
 import type { Account } from '@api/account/data/account.dto';
 import { DatabaseGlobal } from '@api/db/db.global';
-import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { eq } from 'drizzle-orm';
 import Elysia, { type CookieOptions, t } from 'elysia';
 import { ACCESS_TOKEN_TTL } from './auth.const';
@@ -27,7 +26,7 @@ export const AuthPlugin = new Elysia({ name: 'plugin.auth' })
           };
         }
 
-        const sessionService = new AuthSessionService(DatabaseGlobal.client, EnvironmentPlugin.decorator.env());
+        const sessionService = new AuthSessionService(DatabaseGlobal.client);
         try {
           if (typeof accessToken.value !== 'string') return status(401);
 
