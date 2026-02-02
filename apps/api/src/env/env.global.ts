@@ -6,6 +6,8 @@ export class EnvironmentGlobal {
   static data: Environment;
 
   static init() {
+    if (EnvironmentGlobal.data) return;
+
     EnvironmentGlobal.data = createEnvironmentPlugin(EnvironmentDTO).decorator.env();
   }
 }

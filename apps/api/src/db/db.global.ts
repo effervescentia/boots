@@ -8,6 +8,8 @@ export class DatabaseGlobal {
   static client: DB;
 
   static async init(env: Environment) {
+    if (DatabaseGlobal.client) return;
+
     DatabaseGlobal.client = drizzle({
       schema,
       client: new Bun.SQL({

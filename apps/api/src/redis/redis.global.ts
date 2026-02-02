@@ -6,6 +6,8 @@ export class RedisGlobal {
   static service: RedisService;
 
   static async init(env: Environment) {
+    if (RedisGlobal.service) return;
+
     const client = new Bun.RedisClient(
       `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOSTNAME}:${env.REDIS_PORT}`,
     );

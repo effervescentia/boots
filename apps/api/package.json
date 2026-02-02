@@ -39,8 +39,7 @@
     "drizzle-kit": "0.31.8",
     "glob": "11.0.3",
     "jest-date": "1.1.6",
-    "rimraf": "6.0.1",
-    "testcontainers": "11.11.0"
+    "rimraf": "6.0.1"
   },
   "volta": {
     "extends": "../../package.json"

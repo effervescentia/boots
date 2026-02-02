@@ -1,9 +1,14 @@
+import { afterAll, beforeAll } from 'bun:test';
 import type { Environment } from '@api/app/app.env';
-// biome-ignore lint/style/noRestrictedImports: allowed here
-import * as schema from '@api/db/db.schema';
-import { type IntegrationTestOptions, integrationTestFactory } from '@bltx/test';
-import type { AnyElysia } from 'elysia';
+import { DatabaseGlobal } from '@api/db/db.global';
+import type { IntegrationTestOptions } from '@bltx/test';
+import { type AnyElysia, Elysia } from 'elysia';
 import { FixtureService } from './fixture.service';
+import { DatabaseMock } from './mocks/db.mock';
+import { EnvironmentMock } from './mocks/env.mock';
+import { FirebaseMock } from './mocks/firebase.mock';
+import { RedisMock } from './mocks/redis.mock';
+import { ENVIRONMENT } from './test.env';
 
 declare global {
   interface ImportMetaEnv {
@@ -11,40 +16,46 @@ declare global {
   }
 }
 
-export const setupIntegrationTest = (controller: AnyElysia, options?: IntegrationTestOptions<Environment>) => {
-  const helpers = integrationTestFactory({
-    schema,
-    env: {
-      PORT: 8080,
+export const setupIntegrationTest = (
+  controller: AnyElysia,
+  { env: envOverrides, timeout = import.meta.env.CI ? 30000 : 20000, use }: IntegrationTestOptions<Environment> = {},
+) => {
+  const env = { ...ENVIRONMENT, ...envOverrides };
+  let app: AnyElysia;
 
-      WEB_ORIGIN: 'localhost',
+  // TODO: update this once bun fixes this issue
+  // https://github.com/oven-sh/bun/issues/23133
 
-      JWT_AUTH_SECRET: 'test',
+  beforeAll(
+    null,
+    async () => {
+      EnvironmentMock.init(env);
+      await DatabaseMock.init();
+      await RedisMock.init();
+      FirebaseMock.init();
 
-      POSTGRES_HOSTNAME: 'localhost',
-      POSTGRES_PORT: 5432,
-      POSTGRES_DATABASE: 'test',
-      POSTGRES_USERNAME: 'test',
-      POSTGRES_PASSWORD: 'test',
+      app = new Elysia();
+      app = use?.(app) ?? app;
+      app = app.use(controller);
+      await app.modules;
+    },
+    // @ts-expect-error
+    timeout,
+  );
 
-      REDIS_HOSTNAME: 'localhost',
-      REDIS_PORT: 6379,
-      REDIS_USERNAME: 'test',
-      REDIS_PASSWORD: 'test',
-
-      ACCOUNT_MAX_ALIASES: 3,
-      ACCOUNT_ALIAS_EXPIRY_SHORT: 1000,
-      ACCOUNT_ALIAS_EXPIRY_LONG: 10000,
-
-      GOOGLE_APPLICATION_CREDENTIALS: '{}',
-
-      FIREBASE_NOTIFICATION_DATABASE_URL: 'localhost',
-    } satisfies Environment,
-    timeout: import.meta.env.CI ? 30000 : 20000,
-  })(controller, options);
+  afterAll(
+    null,
+    async () => {
+      await DatabaseMock.teardown();
+    },
+    // @ts-expect-error
+    timeout,
+  );
 
   return {
-    ...helpers,
-    fixture: () => new FixtureService(helpers.db()),
+    app: () => app,
+    env: () => env,
+    db: () => DatabaseGlobal.client,
+    fixture: () => new FixtureService(DatabaseGlobal.client),
   };
 };
