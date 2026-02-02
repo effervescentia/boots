@@ -11,10 +11,9 @@ import type { AuthAlgorithm } from '../data/auth-algorithm.enum';
 import { AuthCredentialDB } from '../data/auth-credential.db';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { AuthTransport } from '../data/auth-transport.enum';
-import type { VerifyPasskeySignup } from '../data/verify-passkey-signup.req';
 import { AuthWebCredentialDB } from './data/auth-web-credential.db';
-import type { NegotiateWebLogin } from './data/negotiate-web-login.req';
 import type { VerifyWebLogin } from './data/verify-web-login.req';
+import type { VerifyWebSignup } from './data/verify-web-signup.req';
 
 export class AuthWebService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:web:signup:challenge';
@@ -39,7 +38,7 @@ export class AuthWebService extends DataService {
     return { requestID, challenge };
   }
 
-  async verifySignup(requestID: string, { registration }: VerifyPasskeySignup) {
+  async verifySignup(requestID: string, { registration }: VerifyWebSignup) {
     const challenge = await this.redis.getHashField(AuthWebService.SIGNUP_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
@@ -65,7 +64,7 @@ export class AuthWebService extends DataService {
     return { account, session };
   }
 
-  async negotiateLogin(_data: NegotiateWebLogin) {
+  async negotiateLogin() {
     const requestID = Bun.randomUUIDv7();
     const challenge = webauthn.randomChallenge();
 

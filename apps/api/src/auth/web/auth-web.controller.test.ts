@@ -9,11 +9,10 @@ import { setupIntegrationTest } from '@test/setup.util';
 import { eq } from 'drizzle-orm';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { Authenticated } from '../data/authenticated.res';
-import type { VerifyPasskeySignup } from '../data/verify-passkey-signup.req';
 import { AuthWebController } from './auth-web.controller';
 import { AuthWebService } from './auth-web.service';
-import type { NegotiateWebLogin } from './data/negotiate-web-login.req';
 import type { VerifyWebLogin } from './data/verify-web-login.req';
+import type { VerifyWebSignup } from './data/verify-web-signup.req';
 import type { WebChallenge } from './data/web-challenge.res';
 
 const ENVIRONMENT: Partial<Environment> = {
@@ -53,7 +52,7 @@ describe('AuthWebController', () => {
   describe('POST /auth/web/signup/verify', () => {
     const { app, db } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
-    const request = (signupRequestID: string, data: VerifyPasskeySignup) =>
+    const request = (signupRequestID: string, data: VerifyWebSignup) =>
       app().handle(
         new MockRequest('/auth/web/signup/verify', {
           method: 'post',
@@ -65,7 +64,7 @@ describe('AuthWebController', () => {
       );
 
     test('complete signup', async () => {
-      const data: VerifyPasskeySignup = {
+      const data: VerifyWebSignup = {
         registration: {
           type: 'public-key',
           id: 'registration-id',
@@ -120,16 +119,10 @@ describe('AuthWebController', () => {
   describe('POST /auth/web/login/negotiate', () => {
     const { app } = setupIntegrationTest(AuthWebController, { env: ENVIRONMENT });
 
-    const request = (data: NegotiateWebLogin) =>
-      app().handle(
-        new MockRequest('/auth/web/login/negotiate', {
-          method: 'post',
-          json: data,
-        }),
-      );
+    const request = () => app().handle(new MockRequest('/auth/web/login/negotiate', { method: 'post' }));
 
     test('negotiate a login', async () => {
-      const response = await request({});
+      const response = await request();
       const result: Serialized<WebChallenge> = await unwrap(response);
       const cookies = parseSetCookie(response.headers);
 
@@ -170,7 +163,7 @@ describe('AuthWebController', () => {
           clientExtensionResults: {},
         },
       };
-      const { requestID } = await new AuthWebService(db()).negotiateLogin({});
+      const { requestID } = await new AuthWebService(db()).negotiateLogin();
 
       verifyAuthentication.mockResolvedValue({ userVerified: true });
 

@@ -1,5 +1,6 @@
 package com.effervescentia.boots.client
 
+import com.effervescentia.boots.client.auth.AuthClient
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit

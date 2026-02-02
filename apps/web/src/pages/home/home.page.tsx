@@ -16,7 +16,7 @@ export const Home: React.FC = () => {
       <AppNavigation />
       <h2>Home</h2>
       <strong>
-        {account?.aliases[0]} ({account?.id})
+        {account?.username} ({account?.id})
       </strong>
       <button type="button" onClick={logout}>
         logout

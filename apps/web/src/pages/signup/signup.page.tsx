@@ -47,22 +47,19 @@ export const Signup: React.FC = () => {
     });
 
     const { account } = result;
-    const [alias] = account.aliases;
-
-    if (!alias) throw new Invariant('account created without alias');
 
     if (hasPublicKeySignalAPI(PublicKeyCredential)) {
       await PublicKeyCredential.signalCurrentUserDetails({
         userId: btoa(registration.user.id),
         rpId: DOMAIN,
-        name: alias.name,
-        displayName: alias.name,
+        name: account.username,
+        displayName: account.username,
       });
     }
 
     setAccount({
       id: account.id,
-      aliases: account.aliases.map(({ name }) => name),
+      username: account.username,
     });
 
     routes.home().replace();

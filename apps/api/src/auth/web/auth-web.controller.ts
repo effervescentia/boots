@@ -3,11 +3,10 @@ import Elysia, { NotFoundError, t } from 'elysia';
 import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
 import { AuthenticatedResponse } from '../data/authenticated.res';
-import { VerifyPasskeySignupRequest } from '../data/verify-passkey-signup.req';
 import { AuthSessionService } from '../session/auth-session.service';
 import { AuthWebService } from './auth-web.service';
-import { NegotiateWebLoginRequest } from './data/negotiate-web-login.req';
 import { VerifyWebLoginRequest } from './data/verify-web-login.req';
+import { VerifyWebSignupRequest } from './data/verify-web-signup.req';
 import { WebChallengeResponse } from './data/web-challenge.res';
 
 export const AuthWebController = new Elysia({ prefix: '/auth/web' })
@@ -54,7 +53,7 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
       }
     },
     {
-      body: VerifyPasskeySignupRequest,
+      body: VerifyWebSignupRequest,
       cookie: t.Cookie({
         signupRequestID: t.Optional(t.String()),
         accessToken: t.Optional(t.String()),
@@ -65,8 +64,8 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
 
   .post(
     '/login/negotiate',
-    async ({ service, body, cookie: { loginRequestID } }) => {
-      const { challenge, requestID } = await service.negotiateLogin(body);
+    async ({ service, cookie: { loginRequestID } }) => {
+      const { challenge, requestID } = await service.negotiateLogin();
 
       loginRequestID.set({
         ...AUTH_COOKIE,
@@ -77,7 +76,6 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
       return { challenge };
     },
     {
-      body: NegotiateWebLoginRequest,
       cookie: t.Cookie({
         loginRequestID: t.Optional(t.String()),
       }),

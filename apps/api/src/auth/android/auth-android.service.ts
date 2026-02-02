@@ -10,10 +10,10 @@ import { SIGNUP_TTL } from '../auth.const';
 import { AuthCredentialDB } from '../data/auth-credential.db';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { AuthTransport } from '../data/auth-transport.enum';
-import type { VerifyPasskeySignup } from '../data/verify-passkey-signup.req';
 import { AndroidChallengeDetailsDTO } from './data/android-challenge-details.dto';
 import { AuthAndroidCredentialDB } from './data/auth-android-credential.db';
 import type { AuthDeviceType } from './data/auth-device-type.enum';
+import type { VerifyAndroidSignup } from './data/verify-android-signup.req';
 
 const RP_ID = 'boots.localhost';
 const RP_NAME = 'Boots 4 Good';
@@ -54,10 +54,10 @@ export class AuthAndroidService extends DataService {
       },
     );
 
-    return { requestID, challenge: registration.challenge };
+    return { requestID, registration };
   }
 
-  async verifySignup(requestID: string, { registration }: VerifyPasskeySignup) {
+  async verifySignup(requestID: string, registration: VerifyAndroidSignup) {
     const challenge = await this.redis.getTypedHashField(
       AndroidChallengeDetailsDTO,
       AuthAndroidService.SIGNUP_CHALLENGE,

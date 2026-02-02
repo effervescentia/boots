@@ -20,7 +20,7 @@ export const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => 
 
       setAccount({
         id: account.id,
-        aliases: account.aliases.map(({ name }) => name),
+        username: account.username,
       });
     } catch (err) {
       console.warn('failed to reauthenticate', err);

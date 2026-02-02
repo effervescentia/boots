@@ -13,7 +13,7 @@ export const Login: React.FC = () => {
   const [preferredCredential, setPreferredCredential] = useAtom(preferredCredentialAtom);
 
   const login = async () => {
-    const { challenge } = await client().auth.web.login.negotiate.post({}).then(unpack);
+    const { challenge } = await client().auth.web.login.negotiate.post().then(unpack);
 
     const authentication = await webauthn.authenticate({
       hints: ['client-device'],
@@ -40,22 +40,19 @@ export const Login: React.FC = () => {
         throw err;
       });
 
-    const [alias] = account.aliases;
-    if (!alias) return;
-
     const credentialUserID = authentication.response.userHandle;
     if (hasPublicKeySignalAPI(PublicKeyCredential) && credentialUserID) {
       await PublicKeyCredential.signalCurrentUserDetails({
         userId: credentialUserID,
         rpId: DOMAIN,
-        name: alias.name,
-        displayName: alias.name,
+        name: account.username,
+        displayName: account.username,
       });
     }
 
     setAccount({
       id: account.id,
-      aliases: account.aliases.map(({ name }) => name),
+      username: account.username,
     });
 
     routes.home().replace();

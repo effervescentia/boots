@@ -84,7 +84,7 @@ const createRecursiveMockProxy = <T extends object>(name: string): MockInstance<
 /**
  * creates a mock proxy that can be treated as either a function or an object
  */
-export const createUniversalMockProxy = <M, T extends object>(name: string): DeepMocked<T> => {
+export const createUniversalMockProxy = <T extends object>(name: string): DeepMocked<T> => {
   const cache = new Map<string | number | symbol, any>();
 
   const proxy = new Proxy(createRecursiveMockProxy(name) as T, {
