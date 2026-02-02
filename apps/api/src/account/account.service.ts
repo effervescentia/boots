@@ -1,6 +1,6 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
-import type { AuthCredential } from '@api/auth/data/auth-credential.dto';
-import type { CreateAuthCredential } from '@api/auth/data/create-auth-credential.interface';
+import { AuthWebCredentialDB } from '@api/auth/web/data/auth-web-credential.db';
+import type { DB } from '@api/db/db.types';
 import { FamilyMemberDB } from '@api/family/data/family-member.db';
 import { DataService } from '@api/global/data.service';
 import { NetworkMemberDB } from '@api/network/data/network-member.db';
@@ -10,6 +10,8 @@ import { InternalServerError } from 'elysia';
 import { humanId } from 'human-id';
 import { AccountDB } from './data/account.db';
 import type { AccountDetails } from './data/account-details.dto';
+
+export type CredentialFactory<T> = (tx: DB, accountID: string) => Promise<T>;
 
 export class AccountService extends DataService {
   private static generateUsername() {
@@ -28,13 +30,10 @@ export class AccountService extends DataService {
     return this.db.query.AccountDB.findFirst({ where: eq(AccountDB.username, username) });
   }
 
-  private async createWithUsername(
-    username: string,
-    data: CreateAuthCredential,
-  ): Promise<{ account: AccountDetails; credential: AuthCredential }> {
+  private async createWithUsername<T>(username: string, credentialFactory: CredentialFactory<T>) {
     const { accountID, credential } = await this.transaction(async (tx) => {
       const account = await insertOne(tx, AccountDB, { username });
-      const credential = await insertOne(tx, AuthCredentialDB, { accountID: account.id, ...data });
+      const credential = await credentialFactory(tx, account.id);
 
       return {
         accountID: account.id,
@@ -74,22 +73,22 @@ export class AccountService extends DataService {
   /**
    * this function recursively calls itself to find a new unique account alias
    */
-  async create(credential: CreateAuthCredential): Promise<{ account: AccountDetails; credential: AuthCredential }> {
+  async create<T>(credentialFactory: CredentialFactory<T>): Promise<{ account: AccountDetails; credential: T }> {
     const baseName = AccountService.generateUsername();
     const nameWithMilliseconds = `${baseName}_${AccountService.getMillisecondSuffix()}`;
     const nameWithNanoseconds = `${baseName}_${AccountService.getNanosecondSuffix()}`;
 
     for (const username of [baseName, nameWithMilliseconds, nameWithNanoseconds]) {
-      if (!(await this.getByUsername(username))) return this.createWithUsername(username, credential);
+      if (!(await this.getByUsername(username))) return this.createWithUsername(username, credentialFactory);
     }
 
-    return this.create(credential);
+    return this.create(credentialFactory);
   }
 
   async delete(accountID: string) {
     await updateOne(this.db, AccountDB, eq(AccountDB.id, accountID), { deletedAt: new Date() });
     await this.db.delete(FamilyMemberDB).where(eq(FamilyMemberDB.accountID, accountID));
     await this.db.delete(NetworkMemberDB).where(eq(NetworkMemberDB.accountID, accountID));
-    await this.db.delete(AuthCredentialDB).where(eq(AuthCredentialDB.accountID, accountID));
+    await this.db.delete(AuthWebCredentialDB).where(eq(AuthCredentialDB.accountID, accountID));
   }
 }

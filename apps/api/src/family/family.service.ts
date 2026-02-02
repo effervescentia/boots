@@ -1,8 +1,7 @@
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
-import { RedisService } from '@api/redis/redis.service';
+import type { RedisService } from '@api/redis/redis.service';
 import { insertOne, updateOne } from '@bltx/db';
-import type { RedisClient } from 'bun';
 import { addSeconds } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
 import type { CreateFamily } from './data/create-family.req';
@@ -19,12 +18,11 @@ import { FAMILY_INVITE_TTL } from './family.const';
 export class FamilyService extends DataService {
   public static readonly FAMILY_INVITE = 'family:invite';
 
-  private readonly redis: RedisService;
-
-  constructor(db: DB, redis: RedisClient) {
+  constructor(
+    db: DB,
+    private readonly redis: RedisService,
+  ) {
     super(db);
-
-    this.redis = new RedisService(redis);
   }
 
   async create(accountID: string, data: CreateFamily) {

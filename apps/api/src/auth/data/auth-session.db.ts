@@ -9,8 +9,8 @@ export const AuthSessionDB = pgTable(
     id: serial('id').primaryKey(),
     credentialID: text('credential_id')
       .references(() => AuthCredentialDB.id, { onDelete: 'cascade' })
-      .notNull()
-      .unique(),
+      .unique()
+      .notNull(),
     ...timestamps,
   },
   (t) => [index().on(t.credentialID)],

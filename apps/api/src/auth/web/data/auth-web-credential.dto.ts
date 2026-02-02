@@ -1,10 +1,10 @@
 import { type Static, t } from 'elysia';
-import { AuthAlgorithm } from './auth-algorithm.enum';
-import { AuthTransportDTO } from './auth-transport.enum';
+import { AuthAlgorithm } from '../../data/auth-algorithm.enum';
+import { AuthTransportDTO } from '../../data/auth-transport.enum';
 
-export type AuthCredential = Static<typeof AuthCredentialDTO>;
+export type AuthWebCredential = Static<typeof AuthWebCredentialDTO>;
 
-export const AuthCredentialDTO = t.Object({
+export const AuthWebCredentialDTO = t.Object({
   id: t.String(),
   accountID: t.String({ format: 'uuid' }),
   publicKey: t.String(),

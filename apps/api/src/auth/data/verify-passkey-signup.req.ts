@@ -1,9 +1,9 @@
 import { type Static, t } from 'elysia';
 import { AuthTransportDTO } from './auth-transport.enum';
 
-export type VerifySignup = Static<typeof VerifySignupRequest>;
+export type VerifyPasskeySignup = Static<typeof VerifyPasskeySignupRequest>;
 
-export const VerifySignupRequest = t.Object({
+export const VerifyPasskeySignupRequest = t.Object({
   registration: t.Object({
     type: t.Literal('public-key'),
     id: t.String(),

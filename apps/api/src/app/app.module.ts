@@ -1,6 +1,9 @@
 import { AccountController } from '@api/account/account.controller';
 import { AlertController } from '@api/alert/alert.controller';
-import { AuthController } from '@api/auth/auth.controller';
+import { AuthAndroidController } from '@api/auth/android/auth-android.controller';
+import { AuthModule } from '@api/auth/auth.module';
+import { AuthSessionController } from '@api/auth/session/auth-session.controller';
+import { AuthWebController } from '@api/auth/web/auth-web.controller';
 import { FamilyController } from '@api/family/family.controller';
 import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { HealthController } from '@api/health/health.controller';
@@ -19,7 +22,10 @@ export const App = new Elysia()
   .use(EnvironmentPlugin)
   .use(HealthController)
 
-  .use(AuthController)
+  .use(AuthModule)
+  // .use(AuthSessionController)
+  // .use(AuthWebController)
+  // .use(AuthAndroidController)
   .use(AccountController)
   .use(FamilyController)
   .use(NetworkController)

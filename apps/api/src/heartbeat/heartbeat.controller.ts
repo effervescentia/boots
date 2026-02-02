@@ -1,5 +1,6 @@
 import { AuthPlugin } from '@api/auth/auth.plugin';
 import { DatabasePlugin } from '@api/db/db.plugin';
+import { FirebasePlugin } from '@api/firebase/firebase.plugin';
 import { updateOne } from '@bltx/db';
 import { and, eq } from 'drizzle-orm';
 import Elysia, { NotFoundError, t } from 'elysia';
@@ -18,8 +19,9 @@ class HeartbeatNotFoundError extends NotFoundError {
 
 export const HeartbeatController = new Elysia({ prefix: '/heartbeat' })
   .use(DatabasePlugin)
+  .use(FirebasePlugin)
   .use(AuthPlugin)
-  .derive({ as: 'scoped' }, ({ db }) => ({ service: new HeartbeatService(db()) }))
+  .derive({ as: 'scoped' }, ({ db, firebase }) => ({ service: new HeartbeatService(db(), firebase()) }))
 
   .post(
     '/',

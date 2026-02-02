@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { AccountService } from '@api/account/account.service';
-import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
-import { AuthTransport } from '@api/auth/data/auth-transport.enum';
 import type { DB } from '@api/db/db.types';
+import { FirebasePlugin } from '@api/firebase/firebase.plugin';
 import type { CreateNetwork } from '@api/network/data/create-network.req';
 import { NetworkService } from '@api/network/network.service';
 import { RedisPlugin } from '@api/redis/redis.plugin';
@@ -18,21 +16,12 @@ import { HeartbeatController } from './heartbeat.controller';
 import { HeartbeatService } from './heartbeat.service';
 
 describe('HeartbeatController', () => {
-  const createAccount = (db: DB) => {
-    return new AccountService(db).create({
-      id: Bun.randomUUIDv7(),
-      publicKey: 'public-key',
-      algorithm: AuthAlgorithm.EdDSA,
-      transports: [AuthTransport.NFC],
-    });
-  };
-
   const createNetwork = (db: DB, accountID: string, { name = 'My Network', ...data }: Partial<CreateNetwork> = {}) => {
     return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
   describe('POST /heartbeat', () => {
-    const { app, db } = setupIntegrationTest(HeartbeatController);
+    const { app, db, fixture } = setupIntegrationTest(HeartbeatController);
 
     const request = (accountID: string, data: CreateHeartbeat): Promise<Serialized<Heartbeat>> =>
       app()
@@ -46,7 +35,7 @@ describe('HeartbeatController', () => {
         .then(unwrap);
 
     test('create a heartbeat', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       const result = await request(account.id, { triggers: [{ ttl: 400, networkID: network.id }] });
@@ -67,9 +56,11 @@ describe('HeartbeatController', () => {
     });
 
     test('reject multiple heartbeats', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
-      await new HeartbeatService(db()).create(account.id, { triggers: [{ ttl: 300, networkID: network.id }] });
+      await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
+        triggers: [{ ttl: 300, networkID: network.id }],
+      });
 
       expect(() => request(account.id, { triggers: [{ ttl: 400, networkID: network.id }] })).toThrowError(
         'Each account can only have one Heartbeat configured',
@@ -78,7 +69,7 @@ describe('HeartbeatController', () => {
   });
 
   describe('PUT /heartbeat/:heartbeatID/ping', () => {
-    const { app, db } = setupIntegrationTest(HeartbeatController);
+    const { app, db, fixture } = setupIntegrationTest(HeartbeatController);
 
     const request = (accountID: string, heartbeatID: string): Promise<Serialized<Heartbeat>> =>
       app()
@@ -91,9 +82,9 @@ describe('HeartbeatController', () => {
         .then(unwrap);
 
     test('update a heartbeat', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
-      const heartbeat = await new HeartbeatService(db()).create(account.id, {
+      const heartbeat = await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
         triggers: [{ ttl: 400, networkID: network.id }],
       });
 
@@ -104,7 +95,7 @@ describe('HeartbeatController', () => {
   });
 
   describe('DELETE /heartbeat/:heartbeatID', () => {
-    const { app, db } = setupIntegrationTest(HeartbeatController);
+    const { app, db, fixture } = setupIntegrationTest(HeartbeatController);
 
     const request = (accountID: string, heartbeatID: string) =>
       app().handle(
@@ -115,9 +106,9 @@ describe('HeartbeatController', () => {
       );
 
     test('delete a heartbeat', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
-      const heartbeat = await new HeartbeatService(db()).create(account.id, {
+      const heartbeat = await new HeartbeatService(db(), FirebasePlugin.decorator.firebase()).create(account.id, {
         triggers: [{ ttl: 400, networkID: network.id }],
       });
 

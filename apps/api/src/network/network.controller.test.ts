@@ -1,11 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { AccountService } from '@api/account/account.service';
-import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
-import { AuthTransport } from '@api/auth/data/auth-transport.enum';
+import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
+import { FixtureService } from '@test/fixture.service';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateNetwork } from './data/create-network.req';
@@ -21,27 +20,18 @@ import { NetworkController } from './network.controller';
 import { NetworkService } from './network.service';
 
 describe('NetworkController', () => {
-  const createAccount = (db: DB) => {
-    return new AccountService(db).create({
-      id: Bun.randomUUIDv7(),
-      publicKey: 'public-key',
-      algorithm: AuthAlgorithm.EdDSA,
-      transports: [AuthTransport.NFC],
-    });
-  };
-
   const createNetwork = (db: DB, accountID: string, { name = 'My Network', ...data }: Partial<CreateNetwork> = {}) => {
     return new NetworkService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
   const createNetworkMember = async (db: DB, networkID: string, role?: NetworkRole) => {
-    const { account } = await createAccount(db);
+    const { account } = await new FixtureService(db, {} as Environment).createAccount();
     await insertOne(db, NetworkMemberDB, { networkID, role, accountID: account.id });
     return { account };
   };
 
   describe('POST /network', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, data: CreateNetwork): Promise<Serialized<Network>> =>
       app()
@@ -56,7 +46,7 @@ describe('NetworkController', () => {
 
     test('create a network', async () => {
       const data = { name: 'My Network' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
 
       const result = await request(account.id, data);
 
@@ -78,7 +68,7 @@ describe('NetworkController', () => {
   });
 
   describe('GET /network/:networkID', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, networkID: string): Promise<Serialized<Network>> =>
       app()
@@ -95,7 +85,7 @@ describe('NetworkController', () => {
         });
 
     test('get network details', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       const result = await request(account.id, network.id);
@@ -104,8 +94,8 @@ describe('NetworkController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, network.id)).toThrowError(`No Network exists with ID '${network.id}`);
@@ -113,7 +103,7 @@ describe('NetworkController', () => {
   });
 
   describe('PATCH /network/:networkID', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, networkID: string, data: PatchNetwork): Promise<Serialized<Network>> =>
       app()
@@ -132,7 +122,7 @@ describe('NetworkController', () => {
 
     test('update network details', async () => {
       const data = { name: 'The Tans' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       const result = await request(account.id, network.id, data);
@@ -142,8 +132,8 @@ describe('NetworkController', () => {
 
     test('reject non-members', async () => {
       const data = { name: 'The Tans' };
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, network.id, data)).toThrowError(
@@ -153,7 +143,7 @@ describe('NetworkController', () => {
 
     test('reject non-leaders', async () => {
       const data = { name: 'The Tans' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       await createNetworkMember(db(), network.id, NetworkRole.LEADER);
 
@@ -162,7 +152,7 @@ describe('NetworkController', () => {
   });
 
   describe('DELETE /network/:networkID', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, networkID: string) =>
       app()
@@ -177,7 +167,7 @@ describe('NetworkController', () => {
         });
 
     test('delete network', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       await request(account.id, network.id);
@@ -186,15 +176,15 @@ describe('NetworkController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, network.id)).toThrowError(`No Network exists with ID '${network.id}`);
     });
 
     test('reject if multiple members', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       await createNetworkMember(db(), network.id);
 
@@ -205,7 +195,7 @@ describe('NetworkController', () => {
   });
 
   describe('DELETE /network/:networkID/membership', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, networkID: string) =>
       app()
@@ -220,7 +210,7 @@ describe('NetworkController', () => {
         });
 
     test('delete network membership', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       await createNetworkMember(db(), network.id);
 
@@ -230,7 +220,7 @@ describe('NetworkController', () => {
     });
 
     test('clean up network if all members are deleted', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       await request(account.id, network.id);
@@ -241,7 +231,7 @@ describe('NetworkController', () => {
   });
 
   describe('DELETE /network/:networkID/member/:accountID', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (principalID: string, networkID: string, memberID: string) =>
       app()
@@ -256,7 +246,7 @@ describe('NetworkController', () => {
         });
 
     test('delete network member', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       const { account: networkMember } = await createNetworkMember(db(), network.id);
       await updateOne(db(), NetworkMemberDB, eq(NetworkMemberDB.accountID, account.id), {
@@ -269,7 +259,7 @@ describe('NetworkController', () => {
     });
 
     test('clean up network if all members are deleted', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       await updateOne(db(), NetworkMemberDB, eq(NetworkMemberDB.accountID, account.id), {
         role: NetworkRole.LEADER,
@@ -282,8 +272,8 @@ describe('NetworkController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), memberAccount.id);
       const { account: networkMember } = await createNetworkMember(db(), network.id);
 
@@ -293,7 +283,7 @@ describe('NetworkController', () => {
     });
 
     test('reject non-leaders', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
       const { account: networkMember } = await createNetworkMember(db(), network.id);
 
@@ -304,7 +294,7 @@ describe('NetworkController', () => {
   });
 
   describe('POST /network/:networkID/invite', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (
       accountID: string,
@@ -322,18 +312,20 @@ describe('NetworkController', () => {
         .then((res) => res.json());
 
     test('create a network invite', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const network = await createNetwork(db(), account.id);
 
       const result = await request(account.id, network.id, {});
 
       expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
-      expect(await RedisPlugin.decorator.redis().hexists(NetworkService.NETWORK_INVITE, result.inviteID)).toBeTrue();
+      expect(
+        await RedisPlugin.decorator.redis().client.hexists(NetworkService.NETWORK_INVITE, result.inviteID),
+      ).toBeTrue();
     });
   });
 
   describe('POST /network/invite/:inviteID', () => {
-    const { app, db } = setupIntegrationTest(NetworkController);
+    const { app, db, fixture } = setupIntegrationTest(NetworkController);
 
     const request = (accountID: string, inviteID: string): Promise<Serialized<Network> | null> =>
       app()
@@ -346,8 +338,8 @@ describe('NetworkController', () => {
         .then((res) => res.json());
 
     test('accept a network invite', async () => {
-      const { account: invitedByAccount } = await createAccount(db());
-      const { account: invitedAccount } = await createAccount(db());
+      const { account: invitedByAccount } = await fixture().createAccount();
+      const { account: invitedAccount } = await fixture().createAccount();
       const network = await createNetwork(db(), invitedByAccount.id);
       const { inviteID } = await new NetworkService(db(), RedisPlugin.decorator.redis()).createInvite(
         network.id,
@@ -376,7 +368,7 @@ describe('NetworkController', () => {
           },
         }),
       );
-      expect(await RedisPlugin.decorator.redis().hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();
+      expect(await RedisPlugin.decorator.redis().client.hexists(NetworkService.NETWORK_INVITE, inviteID)).toBeFalse();
     });
   });
 });

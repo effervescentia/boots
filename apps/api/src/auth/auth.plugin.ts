@@ -4,8 +4,8 @@ import { EnvironmentPlugin } from '@api/global/environment.plugin';
 import { eq } from 'drizzle-orm';
 import Elysia, { type CookieOptions, t } from 'elysia';
 import { ACCESS_TOKEN_TTL } from './auth.const';
-import { AuthSessionService } from './auth-session.service';
 import { AuthSessionDB } from './data/auth-session.db';
+import { AuthSessionService } from './session/auth-session.service';
 
 export const AUTH_COOKIE: CookieOptions = {
   domain: 'api.boots.localhost',

@@ -1,12 +1,12 @@
 import type { DB } from '@api/db/db.types';
-import type { RedisClient } from 'bun';
+import type { RedisService } from '@api/redis/redis.service';
 import { sql } from 'drizzle-orm';
 import { NotFoundError } from 'elysia';
 
 export class HealthService {
   constructor(
     private readonly db: DB,
-    private readonly redis: RedisClient,
+    private readonly redis: RedisService,
   ) {}
 
   async assertReady() {
@@ -17,7 +17,7 @@ export class HealthService {
 
     if (count !== 1) throw new NotFoundError('database client not ready');
 
-    await this.redis.ping().catch(() => {
+    await this.redis.client.ping().catch(() => {
       throw new NotFoundError('redis client not ready');
     });
   }
@@ -27,7 +27,7 @@ export class HealthService {
 
     if (count !== 1) throw new NotFoundError('database client not responding');
 
-    await this.redis.ping().catch(() => {
+    await this.redis.client.ping().catch(() => {
       throw new NotFoundError('redis client not responding');
     });
   }

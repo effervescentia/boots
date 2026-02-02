@@ -1,11 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { AccountService } from '@api/account/account.service';
-import { AuthAlgorithm } from '@api/auth/data/auth-algorithm.enum';
-import { AuthTransport } from '@api/auth/data/auth-transport.enum';
+import type { Environment } from '@api/app/app.env';
 import type { DB } from '@api/db/db.types';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { insertOne, updateOne } from '@bltx/db';
 import { MockRequest, type Serialized, serialize } from '@bltx/test';
+import { FixtureService } from '@test/fixture.service';
 import { setupIntegrationTest } from '@test/setup.util';
 import { and, eq } from 'drizzle-orm';
 import type { CreateFamily } from './data/create-family.req';
@@ -20,27 +19,18 @@ import { FamilyController } from './family.controller';
 import { FamilyService } from './family.service';
 
 describe('FamilyController', () => {
-  const createAccount = (db: DB) => {
-    return new AccountService(db).create({
-      id: Bun.randomUUIDv7(),
-      publicKey: 'public-key',
-      algorithm: AuthAlgorithm.EdDSA,
-      transports: [AuthTransport.NFC],
-    });
-  };
-
   const createFamily = (db: DB, accountID: string, { name = 'My Family', ...data }: Partial<CreateFamily> = {}) => {
     return new FamilyService(db, RedisPlugin.decorator.redis()).create(accountID, { name, ...data });
   };
 
   const createFamilyMember = async (db: DB, familyID: string) => {
-    const { account } = await createAccount(db);
+    const { account } = await new FixtureService(db, {} as Environment).createAccount();
     await insertOne(db, FamilyMemberDB, { familyID, accountID: account.id, role: FamilyRole.ADULT });
     return { account };
   };
 
   describe('POST /family', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, data: CreateFamily): Promise<Serialized<Family>> =>
       app()
@@ -55,7 +45,7 @@ describe('FamilyController', () => {
 
     test('create a family', async () => {
       const data = { name: 'My Family' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
 
       const result = await request(account.id, data);
 
@@ -77,7 +67,7 @@ describe('FamilyController', () => {
   });
 
   describe('GET /family/:familyID', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, familyID: string): Promise<Serialized<Family>> =>
       app()
@@ -94,7 +84,7 @@ describe('FamilyController', () => {
         });
 
     test('get family details', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       const result = await request(account.id, family.id);
@@ -103,8 +93,8 @@ describe('FamilyController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const family = await createFamily(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, family.id)).toThrowError(`No Family exists with ID '${family.id}`);
@@ -112,7 +102,7 @@ describe('FamilyController', () => {
   });
 
   describe('PATCH /family/:familyID', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, familyID: string, data: PatchFamily): Promise<Serialized<Family>> =>
       app()
@@ -131,7 +121,7 @@ describe('FamilyController', () => {
 
     test('update family details', async () => {
       const data = { name: 'The Tans' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       const result = await request(account.id, family.id, data);
@@ -141,8 +131,8 @@ describe('FamilyController', () => {
 
     test('reject non-members', async () => {
       const data = { name: 'The Tans' };
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const family = await createFamily(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, family.id, data)).toThrowError(
@@ -152,7 +142,7 @@ describe('FamilyController', () => {
 
     test('reject children', async () => {
       const data = { name: 'The Tans' };
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       await updateOne(db(), FamilyMemberDB, eq(FamilyMemberDB.accountID, account.id), { role: FamilyRole.CHILD });
 
@@ -161,7 +151,7 @@ describe('FamilyController', () => {
   });
 
   describe('DELETE /family/:familyID', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, familyID: string) =>
       app()
@@ -176,7 +166,7 @@ describe('FamilyController', () => {
         });
 
     test('delete family', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       await request(account.id, family.id);
@@ -185,15 +175,15 @@ describe('FamilyController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const family = await createFamily(db(), memberAccount.id);
 
       expect(() => request(nonMemberAccount.id, family.id)).toThrowError(`No Family exists with ID '${family.id}`);
     });
 
     test('reject children', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       await updateOne(db(), FamilyMemberDB, eq(FamilyMemberDB.accountID, account.id), { role: FamilyRole.CHILD });
 
@@ -202,7 +192,7 @@ describe('FamilyController', () => {
   });
 
   describe('DELETE /family/:familyID/membership', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, familyID: string) =>
       app()
@@ -217,7 +207,7 @@ describe('FamilyController', () => {
         });
 
     test('delete family membership', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       await createFamilyMember(db(), family.id);
 
@@ -227,7 +217,7 @@ describe('FamilyController', () => {
     });
 
     test('clean up family if all members are deleted', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       await request(account.id, family.id);
@@ -238,7 +228,7 @@ describe('FamilyController', () => {
   });
 
   describe('DELETE /family/:familyID/member/:accountID', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (principalID: string, familyID: string, memberID: string) =>
       app()
@@ -253,7 +243,7 @@ describe('FamilyController', () => {
         });
 
     test('delete family member', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       const { account: familyMember } = await createFamilyMember(db(), family.id);
 
@@ -263,7 +253,7 @@ describe('FamilyController', () => {
     });
 
     test('clean up family if all members are deleted', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       await request(account.id, family.id, account.id);
@@ -273,8 +263,8 @@ describe('FamilyController', () => {
     });
 
     test('reject non-members', async () => {
-      const { account: memberAccount } = await createAccount(db());
-      const { account: nonMemberAccount } = await createAccount(db());
+      const { account: memberAccount } = await fixture().createAccount();
+      const { account: nonMemberAccount } = await fixture().createAccount();
       const family = await createFamily(db(), memberAccount.id);
       const { account: familyMember } = await createFamilyMember(db(), family.id);
 
@@ -284,7 +274,7 @@ describe('FamilyController', () => {
     });
 
     test('reject children', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
       const { account: familyMember } = await createFamilyMember(db(), family.id);
       await updateOne(db(), FamilyMemberDB, eq(FamilyMemberDB.accountID, account.id), {
@@ -298,7 +288,7 @@ describe('FamilyController', () => {
   });
 
   describe('POST /family/:familyID/invite', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (
       accountID: string,
@@ -316,18 +306,20 @@ describe('FamilyController', () => {
         .then((res) => res.json());
 
     test('create a family invite', async () => {
-      const { account } = await createAccount(db());
+      const { account } = await fixture().createAccount();
       const family = await createFamily(db(), account.id);
 
       const result = await request(account.id, family.id, {});
 
       expect(result).toEqual(expect.objectContaining({ inviteID: expect.any(String) }));
-      expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, result.inviteID)).toBeTrue();
+      expect(
+        await RedisPlugin.decorator.redis().client.hexists(FamilyService.FAMILY_INVITE, result.inviteID),
+      ).toBeTrue();
     });
   });
 
   describe('POST /family/invite/:inviteID', () => {
-    const { app, db } = setupIntegrationTest(FamilyController);
+    const { app, db, fixture } = setupIntegrationTest(FamilyController);
 
     const request = (accountID: string, inviteID: string): Promise<Serialized<Family>> =>
       app()
@@ -340,8 +332,8 @@ describe('FamilyController', () => {
         .then((res) => res.json());
 
     test('accept a family invite', async () => {
-      const { account: invitedByAccount } = await createAccount(db());
-      const { account: invitedAccount } = await createAccount(db());
+      const { account: invitedByAccount } = await fixture().createAccount();
+      const { account: invitedAccount } = await fixture().createAccount();
       const family = await createFamily(db(), invitedByAccount.id);
       const { inviteID } = await new FamilyService(db(), RedisPlugin.decorator.redis()).createInvite(family.id, {
         role: FamilyRole.CHILD,
@@ -356,7 +348,7 @@ describe('FamilyController', () => {
           and(eq(FamilyMemberDB.accountID, invitedAccount.id), eq(FamilyMemberDB.familyID, family.id)),
         ),
       ).toBe(1);
-      expect(await RedisPlugin.decorator.redis().hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();
+      expect(await RedisPlugin.decorator.redis().client.hexists(FamilyService.FAMILY_INVITE, inviteID)).toBeFalse();
     });
   });
 });

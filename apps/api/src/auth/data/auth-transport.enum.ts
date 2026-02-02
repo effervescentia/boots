@@ -1,3 +1,4 @@
+import { nativeEnum } from '@bltx/db';
 import { t } from 'elysia';
 
 export enum AuthTransport {
@@ -10,3 +11,5 @@ export enum AuthTransport {
 }
 
 export const AuthTransportDTO = t.UnionEnum(Object.values(AuthTransport) as [`${AuthTransport}`]);
+
+export const AuthTransportEnum = nativeEnum('auth_transport', AuthTransport);

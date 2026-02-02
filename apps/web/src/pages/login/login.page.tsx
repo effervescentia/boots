@@ -13,7 +13,7 @@ export const Login: React.FC = () => {
   const [preferredCredential, setPreferredCredential] = useAtom(preferredCredentialAtom);
 
   const login = async () => {
-    const { challenge } = await client().auth.login.negotiate.post({}).then(unpack);
+    const { challenge } = await client().auth.web.login.negotiate.post({}).then(unpack);
 
     const authentication = await webauthn.authenticate({
       hints: ['client-device'],
@@ -25,7 +25,7 @@ export const Login: React.FC = () => {
     });
 
     const { account } = await client()
-      .auth.login.verify.post({ authentication })
+      .auth.web.login.verify.post({ authentication })
       .then(unpack)
       .catch(async (err) => {
         setPreferredCredential(null);

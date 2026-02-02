@@ -2,7 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.google.services)
-  kotlin("plugin.serialization") version "2.0.21"
+  kotlin("plugin.serialization") version "2.3.0"
 }
 
 android {
@@ -44,8 +44,13 @@ dependencies {
   implementation(composeBom)
   androidTestImplementation(composeBom)
 
+  implementation(libs.kotlinx.serialization.json)
+
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.messaging)
+
+  implementation(libs.retrofit)
+  implementation(libs.retrofit.converter.kotlinx.serialization)
 
   implementation(libs.androidx.activity)
   implementation(libs.androidx.activity.compose)
@@ -55,11 +60,13 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.material3)
   implementation(libs.androidx.ui.tooling.preview)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.auth)
   debugImplementation(libs.androidx.ui.tooling)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
 
-
   implementation(libs.material)
   testImplementation(libs.junit)
+
 }

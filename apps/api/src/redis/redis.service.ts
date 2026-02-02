@@ -11,7 +11,7 @@ export interface GetOptions {
 }
 
 export class RedisService {
-  constructor(private readonly client: RedisClient) {}
+  constructor(public readonly client: RedisClient) {}
 
   setHashField(hashKey: string, key: string, value: string, { ttl }: SetOptions = {}) {
     if (typeof ttl === 'number') {

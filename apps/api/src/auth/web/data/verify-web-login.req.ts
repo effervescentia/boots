@@ -1,8 +1,8 @@
 import { type Static, t } from 'elysia';
 
-export type VerifyLogin = Static<typeof VerifyLoginRequest>;
+export type VerifyWebLogin = Static<typeof VerifyWebLoginRequest>;
 
-export const VerifyLoginRequest = t.Object({
+export const VerifyWebLoginRequest = t.Object({
   authentication: t.Object({
     type: t.Literal('public-key'),
     id: t.String(),

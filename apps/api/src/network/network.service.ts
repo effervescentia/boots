@@ -1,8 +1,7 @@
 import type { DB } from '@api/db/db.types';
 import { DataService } from '@api/global/data.service';
-import { RedisService } from '@api/redis/redis.service';
+import type { RedisService } from '@api/redis/redis.service';
 import { insertOne, updateOne } from '@bltx/db';
-import type { RedisClient } from 'bun';
 import { addSeconds } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
 import type { CreateNetwork } from './data/create-network.req';
@@ -19,12 +18,11 @@ import { NETWORK_INVITE_TTL } from './network.const';
 export class NetworkService extends DataService {
   public static readonly NETWORK_INVITE = 'network:invite';
 
-  private readonly redis: RedisService;
-
-  constructor(db: DB, redis: RedisClient) {
+  constructor(
+    db: DB,
+    private readonly redis: RedisService,
+  ) {
     super(db);
-
-    this.redis = new RedisService(redis);
   }
 
   async create(accountID: string, data: CreateNetwork) {
