@@ -1,4 +1,3 @@
-import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
 import jwt from '@elysiajs/jwt';
 import { eq } from 'drizzle-orm';
@@ -14,7 +13,6 @@ export class AuthSessionService extends DataService {
     return jwt({ secret, schema: AccessToken, exp: '10m' }).decorator.jwt;
   }
 
-  private readonly env = EnvironmentGlobal.data;
   readonly accessToken = AuthSessionService.createAccessToken(this.env.JWT_AUTH_SECRET);
 
   async get(sessionID: number) {

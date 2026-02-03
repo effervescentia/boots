@@ -1,0 +1,16 @@
+[
+  {
+    "relation": ["delegate_permission/common.get_login_creds"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.effervescentia.boots",
+      "sha256_cert_fingerprints": [
+        "9E:42:5F:D5:EA:A3:98:4F:46:04:1A:90:9B:41:1A:04:CC:D7:3C:4A:F0:89:FC:7A:4E:9B:FB:FE:B1:76:FA:63"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.get_login_creds"],
+    "target": { "namespace": "web", "site": "https://effervescentia.com" }
+  }
+]

@@ -14,11 +14,12 @@ import { NotifyController } from '@api/notify/notify.controller';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { cors } from '@elysiajs/cors';
 import Elysia from 'elysia';
+import logixlysia from 'logixlysia';
 
 export type App = typeof App;
 
-// TODO: write custom logger plugin
 export const App = new Elysia()
+  .use(logixlysia())
   .use(cors({ credentials: true, maxAge: 60 }))
   .use(EnvironmentPlugin)
   .use(DatabasePlugin)

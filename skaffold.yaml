@@ -40,6 +40,10 @@ build:
           - src: 'apps/{api,web}/package.json'
             strip: apps
             dest: '..'
+    - image: static
+      docker:
+        dockerfile: apps/static/Dockerfile
+        cacheFrom: [static]
     - image: db
       docker:
         dockerfile: docker/Dockerfile.db
@@ -83,6 +87,12 @@ deploy:
           image.repository: '{{.IMAGE_REPO_web}}'
           image.tag: '{{.IMAGE_TAG_web}}@{{.IMAGE_DIGEST_web}}'
         dependsOn: ['gateway']
+      - name: static
+        chartPath: apps/static/k8s
+        setValueTemplates:
+          image.repository: '{{.IMAGE_REPO_static}}'
+          image.tag: '{{.IMAGE_TAG_static}}@{{.IMAGE_DIGEST_static}}'
+        dependsOn: ['gateway']
 
 portForward:
   - resourceType: service
@@ -90,6 +100,12 @@ portForward:
     namespace: traefik
     port: 443
     localPort: 1337
+  - resourceType: service
+    resourceName: gateway-traefik
+    namespace: traefik
+    port: 80
+    localPort: 1338
+    address: 0.0.0.0
 
 test:
   - image: api

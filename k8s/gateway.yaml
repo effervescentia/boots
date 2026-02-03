@@ -28,3 +28,15 @@ spec:
         mode: Terminate
         certificateRefs:
           - name: web-boots-web-tls
+    - name: static
+      port: 8000
+      protocol: HTTP
+      # protocol: HTTPS
+      hostname: effervescentia.com
+      allowedRoutes:
+        namespaces:
+          from: All
+      # tls:
+      #   mode: Terminate
+      #   certificateRefs:
+      #     - name: web-boots-web-tls

@@ -48,3 +48,5 @@ adb shell am start \
   -n "com.effervescentia.boots/.ui.MainActivity" \
   -a android.intent.action.MAIN \
   -c android.intent.category.LAUNCHER
+
+wait

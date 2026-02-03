@@ -8,7 +8,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 private val jsonData = Json { ignoreUnknownKeys = true }
 private val retrofit =
-  Retrofit.Builder().baseUrl("https://api.boots.localhost").addConverterFactory(
+  Retrofit.Builder().baseUrl("https://api.boots.localhost:1337").addConverterFactory(
     jsonData.asConverterFactory("application/json".toMediaType())
   ).build()
 

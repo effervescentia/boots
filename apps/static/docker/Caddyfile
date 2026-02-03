@@ -1,0 +1,12 @@
+:{$PORT} {
+  encode
+  root * /usr/share/caddy
+
+  try_files {path} /index.html
+  file_server
+}
+
+:{$PORT_HEALTH} {
+  respond /ready "ok" 200
+  respond /live "ok" 200
+}

@@ -8,4 +8,7 @@ build
 **/k8s/charts
 /k8s/*/charts
 
+# certificates
 *.pem
+*.crt
+*.jks

@@ -43,14 +43,12 @@ export const NegotiateAndroidSignupResponse = t.Object({
   ),
 
   extensions: t.Optional(
-    t.Array(
-      t.Object({
-        appid: t.Optional(t.String()),
-        credProps: t.Optional(t.Boolean()),
-        hmacCreateSecret: t.Optional(t.Boolean()),
-        minPinLength: t.Optional(t.Boolean()),
-      }),
-    ),
+    t.Object({
+      appid: t.Optional(t.String()),
+      credProps: t.Optional(t.Boolean()),
+      hmacCreateSecret: t.Optional(t.Boolean()),
+      minPinLength: t.Optional(t.Boolean()),
+    }),
   ),
 
   pubKeyCredParams: t.Array(

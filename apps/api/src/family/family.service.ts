@@ -1,5 +1,4 @@
 import { DataService } from '@api/global/data.service';
-import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { addSeconds } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
@@ -16,8 +15,6 @@ import { FAMILY_INVITE_TTL } from './family.const';
 
 export class FamilyService extends DataService {
   static readonly FAMILY_INVITE = 'family:invite';
-
-  private readonly redis = RedisGlobal.service;
 
   async create(accountID: string, data: CreateFamily) {
     return this.transaction(async (tx) => {

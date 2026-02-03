@@ -1,47 +1,57 @@
 package com.effervescentia.boots.ui.page.auth
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.effervescentia.boots.client.Client
 import kotlinx.coroutines.launch
 
-@Composable
-fun Signup() {
-  val ctx = LocalContext.current
-  val scope = rememberCoroutineScope()
-  val credentialManager = remember { CredentialManager.create(ctx) }
+class SignupState : ViewModel() {
+  fun signup(ctx: Context) {
+    viewModelScope.launch {
 
-  Button(onClick = {
-    scope.launch {
-      val res = Client.auth.negotiateSignup().execute()
-      if (!res.isSuccessful || res.body() == null) throw Error("Failed to negotiate signup")
+      try {
+        val registration = Client.auth.negotiateSignup().string()
+        Log.w("Sigup", "registration $registration")
 
-      val registration = res.body().toString()
-      val credential = credentialManager.createCredential(
-        ctx,
-        CreatePublicKeyCredentialRequest(registration)
-      )
+        val credential = CredentialManager.create(ctx).createCredential(
+          ctx,
+          CreatePublicKeyCredentialRequest(registration)
+        )
 
-      when (credential) {
-        is CreatePublicKeyCredentialResponse -> {
-          val res = Client.auth.verifySignup(credential.registrationResponseJson).execute()
-          if (!res.isSuccessful || res.body() == null) throw Error("Failed to verify signup")
+        when (credential) {
+          is CreatePublicKeyCredentialResponse -> {
+            val res = Client.auth.verifySignup(credential.registrationResponseJson).execute()
+            if (!res.isSuccessful || res.body() == null) throw Error("Failed to verify signup")
 
-          Log.w("Signup", res.body()?.account?.username.orEmpty())
+            Log.w("Signup", res.body()?.account?.username.orEmpty())
+          }
+
+          else -> throw Error("Unsupported credential type")
         }
-
-        else -> throw Error("Unsupported credential type")
+      } catch (e: Exception) {
+        Log.w("Sigup", "error caught")
+        Log.w("Sigup", e)
       }
+
+
     }
-  }) {
+  }
+}
+
+@Composable
+fun Signup(state: SignupState = SignupState()) {
+  val ctx = LocalContext.current
+
+  Button(onClick = { state.signup(ctx) }) {
     Text("Create Account")
   }
 }

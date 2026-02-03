@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+podLabels: {}
+
+service:
+  port: 8080
+
+health:
+  enabled: true
+  port: 9090
+
+gateway:
+  name: traefik-gateway
+  namespace: traefik
+  sectionName: static
+
+route:
+  hostname: effervescentia.com
+
+tls:
+  namespace: traefik

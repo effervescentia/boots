@@ -1,7 +1,5 @@
 import { AccountService } from '@api/account/account.service';
-import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
-import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import type { InferInsertModel } from 'drizzle-orm';
@@ -22,8 +20,6 @@ export class AuthAndroidService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:android:signup:challenge';
   static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
 
-  private readonly redis = RedisGlobal.service;
-  private readonly env = EnvironmentGlobal.data;
   private readonly account = new AccountService(this.db);
 
   private async createCredential(accountID: string, data: InferInsertModel<typeof AuthAndroidCredentialDB>) {

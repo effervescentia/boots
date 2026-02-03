@@ -44,7 +44,7 @@ data class AuthenticatedResponse(val account: AccountDetails)
 
 interface AuthClient {
   @POST("auth/android/signup/negotiate")
-  fun negotiateSignup(): Call<ResponseBody>
+  suspend fun negotiateSignup(): ResponseBody
 
   @Headers("Content-Type: application/json")
   @POST("auth/android/signup/verify")

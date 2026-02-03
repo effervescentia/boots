@@ -1,5 +1,4 @@
 import { DataService } from '@api/global/data.service';
-import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne, updateOne } from '@bltx/db';
 import { addSeconds } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
@@ -16,8 +15,6 @@ import { NETWORK_INVITE_TTL } from './network.const';
 
 export class NetworkService extends DataService {
   static readonly NETWORK_INVITE = 'network:invite';
-
-  private readonly redis = RedisGlobal.service;
 
   async create(accountID: string, data: CreateNetwork) {
     return this.transaction(async (tx) => {

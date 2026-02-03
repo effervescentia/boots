@@ -1,7 +1,5 @@
 import { AccountService } from '@api/account/account.service';
-import { EnvironmentGlobal } from '@api/env/env.global';
 import { DataService } from '@api/global/data.service';
-import { RedisGlobal } from '@api/redis/redis.global';
 import { insertOne } from '@bltx/db';
 import { server as webauthn } from '@passwordless-id/webauthn';
 import { eq, type InferInsertModel } from 'drizzle-orm';
@@ -19,8 +17,6 @@ export class AuthWebService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:web:signup:challenge';
   static readonly LOGIN_CHALLENGE = 'auth:web:login:challenge';
 
-  private readonly env = EnvironmentGlobal.data;
-  private readonly redis = RedisGlobal.service;
   private readonly account = new AccountService(this.db);
 
   async createCredential(accountID: string, data: InferInsertModel<typeof AuthWebCredentialDB>) {
