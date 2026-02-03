@@ -24,7 +24,9 @@ gateway:
   sectionName: static
 
 route:
-  hostname: effervescentia.com
+  hostnames:
+    - effervescentia.com
+    - static.boots.localhost
 
 tls:
   namespace: traefik

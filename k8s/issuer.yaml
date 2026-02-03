@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: traefik-cert-manager-issuer
+  namespace: traefik
+spec:
+  acme:
+    email: boots4good@gmail.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: traefik-cert-manager-issuer-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: traefik-gateway
+                namespace: traefik
+                kind: Gateway

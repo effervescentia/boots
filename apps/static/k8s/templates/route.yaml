@@ -8,9 +8,11 @@ spec:
   parentRefs:
     - name: {{ .Values.gateway.name }}
       namespace: {{ .Values.gateway.namespace }}
-      sectionName: {{ .Values.gateway.sectionName }}
+      # sectionName: {{ .Values.gateway.sectionName }}
   hostnames:
-    - {{ .Values.route.hostname }}
+    {{- with .Values.route.hostnames }}
+    {{- toYaml . | nindent 2 }}
+    {{- end }}
   rules:
     - matches:
         - path:

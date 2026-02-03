@@ -52,6 +52,7 @@ build:
 manifests:
   rawYaml:
     - k8s/gateway.yaml
+    - k8s/issuer.yaml
 
 deploy:
   helm:
@@ -89,10 +90,21 @@ deploy:
         dependsOn: ['gateway']
       - name: static
         chartPath: apps/static/k8s
+        useHelmSecrets: true
         setValueTemplates:
           image.repository: '{{.IMAGE_REPO_static}}'
           image.tag: '{{.IMAGE_TAG_static}}@{{.IMAGE_DIGEST_static}}'
         dependsOn: ['gateway']
+      - name: cert-manager
+        remoteChart: oci://quay.io/jetstack/charts/cert-manager
+        namespace: cert-manager
+        createNamespace: true
+        setValues:
+          crds.enabled: true
+          config:
+            apiVersion: controller.config.cert-manager.io/v1alpha1
+            kind: ControllerConfiguration
+            enableGatewayAPI: true
 
 portForward:
   - resourceType: service
@@ -100,6 +112,7 @@ portForward:
     namespace: traefik
     port: 443
     localPort: 1337
+    address: 0.0.0.0
   - resourceType: service
     resourceName: gateway-traefik
     namespace: traefik

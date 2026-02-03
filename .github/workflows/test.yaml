@@ -42,11 +42,11 @@ jobs:
         run: |
           curl -Lo sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
           sudo install sops /usr/local/bin/
-          sops decrypt k8s/secrets.yaml > /dev/null
+          sops decrypt k8s/secrets.enc.yaml > /dev/null
       - name: Install Helm secrets
         run: |
           helm plugin install https://github.com/jkroepke/helm-secrets --version v4.6.10
-          helm secrets decrypt k8s/secrets.yaml > /dev/null
+          helm secrets decrypt k8s/secrets.enc.yaml > /dev/null
       - name: Install vals
         run: |
           curl -L https://github.com/helmfile/vals/releases/download/v0.42.4/vals_0.42.4_linux_amd64.tar.gz | tar -xzv

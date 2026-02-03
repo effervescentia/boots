@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: "{{ include "boots-static.fullname" . }}-tls"
+  namespace: {{ .Values.tls.namespace }}
+  labels:
+    {{- include "boots-static.labels" . | nindent 4 }}
+data:
+  tls.crt: "ref+sops://k8s/secrets.enc.yaml#/STATIC_TLS_CERT"
+  tls.key: "ref+sops://k8s/secrets.enc.yaml#/STATIC_TLS_KEY"

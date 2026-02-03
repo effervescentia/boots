@@ -12,3 +12,6 @@ build
 *.pem
 *.crt
 *.jks
+
+#sops
+*.enc.tmp.*
