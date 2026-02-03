@@ -1,0 +1,1 @@
+DROP TYPE "public"."auth_transport";

@@ -3,7 +3,7 @@ export type { AccountDetails } from '@api/account/data/account-details.dto';
 export type { Alert } from '@api/alert/data/alert.dto';
 export type { AuthSession } from '@api/auth/data/auth-session.dto';
 export { AuthTransport } from '@api/auth/data/auth-transport.enum';
-export type { AuthWebCredential as AuthCredential } from '@api/auth/web/data/auth-web-credential.dto';
+export type { AuthWebCredential } from '@api/auth/web/data/auth-web-credential.dto';
 export type { Family } from '@api/family/data/family.dto';
 export { FamilyRole } from '@api/family/data/family-role.enum';
 export type { Heartbeat } from '@api/heartbeat/data/heartbeat.dto';

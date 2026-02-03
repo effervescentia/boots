@@ -1,9 +1,9 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
+import { AuthTransportEnum } from '@api/auth/data/auth-transport.db';
 import { bytea } from '@api/db/utils/column.util';
 import { nativeEnum, timestamps } from '@bltx/db';
 import { relations } from 'drizzle-orm';
 import { boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
-import { AuthTransportEnum } from '../../data/auth-transport.enum';
 import { AuthDeviceType } from './auth-device-type.enum';
 
 export const AuthDeviceTypeEnum = nativeEnum('auth_device_type', AuthDeviceType);

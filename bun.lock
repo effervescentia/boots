@@ -40,6 +40,7 @@
         "@electric-sql/pglite": "0.3.5",
         "@testcontainers/redis": "11.11.0",
         "@types/pg": "8.15.5",
+        "@voiceflow/universal-mock": "1.1.0",
         "drizzle-kit": "0.31.8",
         "glob": "11.0.3",
         "jest-date": "1.1.6",
@@ -532,6 +533,8 @@
     "@vitest/spy": ["@vitest/spy@3.2.4", "", { "dependencies": { "tinyspy": "^4.0.3" } }, "sha512-vAfasCOe6AIK70iP5UD11Ac4siNUNJ9i/9PZ3NKx07sG6sUxeag1LWdNrMWeKKYBLlzuK+Gn65Yd5nyL6ds+nw=="],
 
     "@vitest/utils": ["@vitest/utils@3.2.4", "", { "dependencies": { "@vitest/pretty-format": "3.2.4", "loupe": "^3.1.4", "tinyrainbow": "^2.0.0" } }, "sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA=="],
+
+    "@voiceflow/universal-mock": ["@voiceflow/universal-mock@1.1.0", "", { "peerDependencies": { "vitest": "^4" }, "optionalPeers": ["vitest"] }, "sha512-v0iZmeLR4BZiKOAdvW2oYoa8+RweUwOqcW3xlTouORBYmhKWfYXa7fTQlMPcfNnjJST7DgolHs1Xm3rKPGt9hg=="],
 
     "abort-controller": ["abort-controller@3.0.0", "", { "dependencies": { "event-target-shim": "^5.0.0" } }, "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg=="],
 

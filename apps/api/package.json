@@ -36,6 +36,7 @@
     "@electric-sql/pglite": "0.3.5",
     "@testcontainers/redis": "11.11.0",
     "@types/pg": "8.15.5",
+    "@voiceflow/universal-mock": "1.1.0",
     "drizzle-kit": "0.31.8",
     "glob": "11.0.3",
     "jest-date": "1.1.6",

@@ -68,5 +68,9 @@ dependencies {
 
   implementation(libs.material)
   testImplementation(libs.junit)
-
 }
+
+tasks.register("launchDev", Exec::class) {
+  commandLine("./scripts/launch.sh")
+}
+

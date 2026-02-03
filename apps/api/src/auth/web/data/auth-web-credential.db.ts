@@ -1,9 +1,9 @@
 import { AuthCredentialDB } from '@api/auth/data/auth-credential.db';
+import { AuthTransportEnum } from '@api/auth/data/auth-transport.db';
 import { nativeEnum, timestamps } from '@bltx/db';
 import { relations } from 'drizzle-orm';
 import { index, pgTable, text } from 'drizzle-orm/pg-core';
 import { AuthAlgorithm } from '../../data/auth-algorithm.enum';
-import { AuthTransportEnum } from '../../data/auth-transport.enum';
 
 export const AuthAlgorithmEnum = nativeEnum('auth_algorithm', AuthAlgorithm);
 
