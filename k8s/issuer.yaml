@@ -15,4 +15,5 @@ spec:
             parentRefs:
               - name: traefik-gateway
                 namespace: traefik
+                sectionName: static-http
                 kind: Gateway

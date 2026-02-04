@@ -21,12 +21,10 @@ health:
 gateway:
   name: traefik-gateway
   namespace: traefik
-  sectionName: static
+  sectionName: static-https
 
 route:
-  hostnames:
-    - effervescentia.com
-    - static.boots.localhost
+  hostname: effervescentia.com
 
 tls:
   namespace: traefik

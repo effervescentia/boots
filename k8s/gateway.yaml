@@ -30,18 +30,8 @@ spec:
         mode: Terminate
         certificateRefs:
           - name: web-boots-web-tls
-    - name: static-boots
-      port: 8443
-      protocol: HTTPS
-      hostname: static.boots.localhost
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: static-boots-static-tls
     
+    # used by cert-manager to serve issuer http01 verification
     - name: static-http
       port: 8000
       protocol: HTTP
@@ -49,6 +39,8 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    
+    # used to serve files from static/public
     - name: static-https
       port: 8443
       protocol: HTTPS
