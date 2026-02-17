@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: issuer
+  namespace: boots
+spec:
+  acme:
+    email: boots.4.good@gmail.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: issuer-staging-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: gateway
+                namespace: boots
+                kind: Gateway

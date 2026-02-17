@@ -53,7 +53,7 @@ build:
 manifests:
   rawYaml:
     - k8s/namespace.yaml
-    - k8s/issuer.yaml
+    - k8s/issuer-production.yaml
     - k8s/gateway.yaml
 
 deploy:
@@ -104,6 +104,10 @@ profiles:
     patches:
       - op: remove
         path: /test
+
+      - op: replace
+        path: /manifests/rawYaml/1
+        value: k8s/issuer-staging.yaml
 
       - op: add
         path: /deploy/helm/releases/0/skipBuildDependencies

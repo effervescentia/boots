@@ -6,10 +6,9 @@ metadata:
 spec:
   acme:
     email: boots.4.good@gmail.com
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
-    # server: {{ .Values.issuer.acme.server }}
+    server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: issuer-key
+      name: issuer-production-key
     solvers:
       - http01:
           gatewayHTTPRoute:
