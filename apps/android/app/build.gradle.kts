@@ -7,8 +7,14 @@ plugins {
 
 android {
   namespace = "com.effervescentia.boots"
+
   compileSdk {
     version = release(36)
+  }
+
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
   defaultConfig {
@@ -24,6 +30,7 @@ android {
   buildFeatures {
     compose = true
   }
+
   buildTypes {
     release {
       isMinifyEnabled = false
@@ -32,10 +39,6 @@ android {
         "proguard-rules.pro"
       )
     }
-  }
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
   }
 }
 
@@ -70,7 +73,23 @@ dependencies {
   testImplementation(libs.junit)
 }
 
-tasks.register("launchDev", Exec::class) {
+tasks.register<Exec>("launchDev") {
   commandLine("./scripts/launch.sh")
 }
 
+abstract class GenerateNetworkConfigTask : Exec() {
+  @get:OutputDirectory
+  abstract val outputDirectory: DirectoryProperty
+}
+
+val generateNetworkConfigTask = tasks.register<GenerateNetworkConfigTask>("generateNetworkConfig") {
+  group = "build"
+
+  outputDirectory = layout.buildDirectory.dir("generated/network_config")
+
+  commandLine("./scripts/generate_network_config.sh", "${outputDirectory.get()}")
+}
+
+androidComponents.onVariants { variant ->
+  variant.sources.res!!.addGeneratedSourceDirectory(generateNetworkConfigTask) { it.outputDirectory }
+}

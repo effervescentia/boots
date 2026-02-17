@@ -13,7 +13,7 @@ import { AuthAndroidCredentialDB } from './data/auth-android-credential.db';
 import type { AuthDeviceType } from './data/auth-device-type.enum';
 import type { VerifyAndroidSignup } from './data/verify-android-signup.req';
 
-const RP_ID = 'effervescentia.com';
+const RP_ID = 'api.boots.effervescentia.com';
 const RP_NAME = 'Boots 4 Good';
 
 export class AuthAndroidService extends DataService {
