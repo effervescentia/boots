@@ -19,18 +19,17 @@ health:
   port: 9090
 
 gateway:
-  name: traefik-gateway
-  namespace: traefik
+  name: gateway
   sectionName: web
 
 route:
-  hostname: app.boots.localhost
+  hostname: app.boots.effervescentia.com
 
 tls:
   namespace: traefik
 
 api:
-  host: 'https://api.boots.localhost:1337'
+  host: 'https://api.boots.effervescentia.com:1337'
 
 geolocation:
   # cache TTL in seconds

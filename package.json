@@ -10,7 +10,7 @@
     "build": "turbo run build",
     "check": "biome check --use-editorconfig true",
     "check:types": "turbo run check:types",
-    "dev": "skaffold dev --kube-context=minikube --auto-build=false",
+    "dev": "skaffold dev --kube-context=k3d-homelab",
     "format": "biome format --write --use-editorconfig true",
     "plop": "NODE_OPTIONS='--import tsx' plop --plopfile=plopfile.ts",
     "test": "turbo run test",

@@ -13,6 +13,7 @@ import { NetworkController } from '@api/network/network.controller';
 import { NotifyController } from '@api/notify/notify.controller';
 import { RedisPlugin } from '@api/redis/redis.plugin';
 import { cors } from '@elysiajs/cors';
+import { staticPlugin } from '@elysiajs/static';
 import Elysia from 'elysia';
 import logixlysia from 'logixlysia';
 
@@ -21,6 +22,7 @@ export type App = typeof App;
 export const App = new Elysia()
   .use(logixlysia())
   .use(cors({ credentials: true, maxAge: 60 }))
+  .use(staticPlugin({ prefix: '' }))
   .use(EnvironmentPlugin)
   .use(DatabasePlugin)
   .use(RedisPlugin)

@@ -11,6 +11,6 @@
   },
   {
     "relation": ["delegate_permission/common.get_login_creds"],
-    "target": { "namespace": "web", "site": "https://effervescentia.com" }
+    "target": { "namespace": "web", "site": "https://api.boots.localhost:1337" }
   }
 ]

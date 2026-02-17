@@ -63,7 +63,7 @@ EXPOSE 8080/tcp
 ENTRYPOINT [ "sh", "./entrypoint.sh" ]
 
 
-FROM caddy:2.10-alpine AS release-web
+FROM caddy:2.10.2-alpine AS release-web
 WORKDIR /usr/share/caddy
 
 ENV NODE_ENV='production'

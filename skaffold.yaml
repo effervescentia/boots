@@ -3,32 +3,40 @@ kind: Config
 metadata:
   name: boots
 
-build:  
+build:
   local:
+    push: true
     useDockerCLI: true
   artifacts:
-    - image: api
+    - image: homelab:9000/boots-db
+      docker:
+        dockerfile: docker/Dockerfile.db
+        cacheFrom: [oven/bun:1.3.1-alpine, homelab:9000/boots-db]
+    - image: homelab:9000/boots-api
       docker:
         dockerfile: docker/Dockerfile.prod
         target: release-api
         buildArgs:
           APP: api
-        cacheFrom: [api]
+        cacheFrom: [oven/bun:1.3.1-alpine, homelab:9000/boots-api]
       sync:
         manual:
           - src: 'apps/api/**/*.ts'
             strip: apps/api
             dest: '.'
+          - src: 'apps/api/public/**/*'
+            strip: apps/api/public
+            dest: '.'
           - src: 'apps/api/package.json'
             strip: apps/api
             dest: '.'
-    - image: web
+    - image: homelab:9000/boots-web
       docker:
         dockerfile: docker/Dockerfile.prod
         target: release-web
         buildArgs:
           APP: web
-        cacheFrom: [web]
+        cacheFrom: [oven/bun:1.3.1-alpine, caddy:2.10.2-alpine, homelab:9000/boots-web]
       sync:
         manual:
           - src: 'apps/web/**/*.{ts,tsx,html}'
@@ -40,85 +48,40 @@ build:
           - src: 'apps/{api,web}/package.json'
             strip: apps
             dest: '..'
-    - image: static
-      docker:
-        dockerfile: apps/static/Dockerfile
-        cacheFrom: [static]
-    - image: db
-      docker:
-        dockerfile: docker/Dockerfile.db
-        cacheFrom: [db]
+    
 
 manifests:
   rawYaml:
+    - k8s/namespace.yaml
+    - k8s/cluster-issuer.yaml
     - k8s/gateway.yaml
-    - k8s/issuer.yaml
 
 deploy:
   helm:
     releases:
-      - name: gateway
-        repo: https://traefik.github.io/charts
-        remoteChart: traefik
-        namespace: traefik
-        createNamespace: true
-        setValues:
-          gateway.enabled: false
-          providers:
-            kubernetesIngress.enabled: false
-            kubernetesGateway.enabled: true
       - name: db
         chartPath: k8s/db
+        namespace: boots
+        createNamespace: true
         wait: true
         useHelmSecrets: true
         setValueTemplates:
-          migration.image.repository: '{{.IMAGE_REPO_db}}'
-          migration.image.tag: '{{.IMAGE_TAG_db}}@{{.IMAGE_DIGEST_db}}'
+          migration.image.repository: homelab:9000/boots-db
+          migration.image.tag: '{{.IMAGE_TAG_homelab_9000_boots_db}}@{{.IMAGE_DIGEST_homelab_9000_boots_db}}'
       - name: api
         chartPath: apps/api/k8s
+        namespace: boots
         useHelmSecrets: true
         setValueTemplates:
-          image.repository: '{{.IMAGE_REPO_api}}'
-          image.tag: '{{.IMAGE_TAG_api}}@{{.IMAGE_DIGEST_api}}'
-        dependsOn: ['gateway']
+          image.repository: homelab:9000/boots-api
+          image.tag: '{{.IMAGE_TAG_homelab_9000_boots_api}}@{{.IMAGE_DIGEST_homelab_9000_boots_api}}'
       - name: web
         chartPath: apps/web/k8s
+        namespace: boots
         useHelmSecrets: true
         setValueTemplates:
-          image.repository: '{{.IMAGE_REPO_web}}'
-          image.tag: '{{.IMAGE_TAG_web}}@{{.IMAGE_DIGEST_web}}'
-        dependsOn: ['gateway']
-      - name: static
-        chartPath: apps/static/k8s
-        useHelmSecrets: true
-        setValueTemplates:
-          image.repository: '{{.IMAGE_REPO_static}}'
-          image.tag: '{{.IMAGE_TAG_static}}@{{.IMAGE_DIGEST_static}}'
-        dependsOn: ['gateway']
-      - name: cert-manager
-        remoteChart: oci://quay.io/jetstack/charts/cert-manager
-        namespace: cert-manager
-        createNamespace: true
-        setValues:
-          crds.enabled: true
-          config:
-            apiVersion: controller.config.cert-manager.io/v1alpha1
-            kind: ControllerConfiguration
-            enableGatewayAPI: true
-
-portForward:
-  - resourceType: service
-    resourceName: gateway-traefik
-    namespace: traefik
-    port: 443
-    localPort: 1337
-    address: 0.0.0.0
-  - resourceType: service
-    resourceName: gateway-traefik
-    namespace: traefik
-    port: 80
-    localPort: 1338
-    address: 0.0.0.0
+          image.repository: homelab:9000/boots-web
+          image.tag: '{{.IMAGE_TAG_homelab_9000_boots_web}}@{{.IMAGE_DIGEST_homelab_9000_boots_web}}'
 
 test:
   - image: api
@@ -143,30 +106,30 @@ profiles:
         path: /test
 
       - op: add
-        path: /deploy/helm/releases/1/skipBuildDependencies
+        path: /deploy/helm/releases/0/skipBuildDependencies
         value: true
 
       # dev api config
-      - op: replace
-        path: /build/artifacts/0/docker/dockerfile
-        value: docker/Dockerfile.dev
-      - op: replace
-        path: /build/artifacts/0/docker/target
-        value: dev-api
-      - op: add
-        path: /deploy/helm/releases/2/setValues
-        value:
-          health.enabled: false
-
-      # dev web config
       - op: replace
         path: /build/artifacts/1/docker/dockerfile
         value: docker/Dockerfile.dev
       - op: replace
         path: /build/artifacts/1/docker/target
+        value: dev-api
+      - op: add
+        path: /deploy/helm/releases/1/setValues
+        value:
+          health.enabled: false
+
+      # dev web config
+      - op: replace
+        path: /build/artifacts/2/docker/dockerfile
+        value: docker/Dockerfile.dev
+      - op: replace
+        path: /build/artifacts/2/docker/target
         value: dev-web
       - op: add
-        path: /deploy/helm/releases/3/setValues
+        path: /deploy/helm/releases/2/setValues
         value:
           health.enabled: false
   # - name: ci

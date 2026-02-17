@@ -18,18 +18,14 @@ health:
   enabled: true
 
 gateway:
-  name: traefik-gateway
-  namespace: traefik
+  name: gateway
   sectionName: api
 
 route:
-  hostname: api.boots.localhost
-
-tls:
-  namespace: traefik
+  hostname: api.boots.effervescentia.com
 
 web:
-  origin: https://app.boots.localhost:1337
+  origin: https://app.boots.effervescentia.com:1337
 
 postgres:
   hostname: db-postgres

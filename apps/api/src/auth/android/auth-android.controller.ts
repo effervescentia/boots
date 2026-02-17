@@ -1,6 +1,6 @@
 import { DatabaseGlobal } from '@api/db/db.global';
 import Elysia, { NotFoundError, t } from 'elysia';
-import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
+import { SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
 import { AuthenticatedResponse } from '../data/authenticated.res';
 import { AuthSessionService } from '../session/auth-session.service';

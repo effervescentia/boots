@@ -1,54 +1,46 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: traefik-gateway
-  namespace: traefik
+  name: gateway
+  namespace: boots
   annotations:
-    cert-manager.io/issuer: traefik-cert-manager-issuer
+    cert-manager.io/cluster-issuer: boots-cluster-issuer
 spec:
   gatewayClassName: traefik
   listeners:
     - name: api
       port: 8443
       protocol: HTTPS
-      hostname: api.boots.localhost
+      hostname: api.boots.effervescentia.com
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
       tls:
         mode: Terminate
         certificateRefs:
-          - name: api-boots-api-tls
+          - name: api-tls
+    - name: api-http
+      port: 8000
+      protocol: HTTP
+      hostname: api.boots.effervescentia.com
+      allowedRoutes:
+        namespaces:
+          from: Same
     - name: web
       port: 8443
       protocol: HTTPS
-      hostname: app.boots.localhost
+      hostname: app.boots.effervescentia.com
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
       tls:
         mode: Terminate
         certificateRefs:
-          - name: web-boots-web-tls
-    
-    # used by cert-manager to serve issuer http01 verification
-    - name: static-http
+          - name: web-tls
+    - name: web-http
       port: 8000
       protocol: HTTP
-      hostname: effervescentia.com
+      hostname: app.boots.effervescentia.com
       allowedRoutes:
         namespaces:
-          from: All
-    
-    # used to serve files from static/public
-    - name: static-https
-      port: 8443
-      protocol: HTTPS
-      hostname: effervescentia.com
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: boots-static-tls
+          from: Same
