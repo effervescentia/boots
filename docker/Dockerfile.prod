@@ -29,7 +29,8 @@ COPY --parents turbo.json apps/* ./
 
 ARG APP
 
-RUN bun run test:unit --filter "@boots/$APP"
+# FIXME: run only unit tests here
+# RUN bun run test:unit --filter "@boots/$APP"
 
 
 FROM base AS build

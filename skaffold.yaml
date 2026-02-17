@@ -48,12 +48,10 @@ build:
           - src: 'apps/{api,web}/package.json'
             strip: apps
             dest: '..'
-    
 
 manifests:
   rawYaml:
-    - k8s/namespace.yaml
-    - k8s/issuer-production.yaml
+    - k8s/issuer-staging.yaml
     - k8s/gateway.yaml
 
 deploy:
@@ -63,7 +61,7 @@ deploy:
         chartPath: k8s/db
         namespace: boots
         createNamespace: true
-        wait: true
+        wait: true # TODO: consider removing this
         useHelmSecrets: true
         setValueTemplates:
           migration.image.repository: homelab:9000/boots-db

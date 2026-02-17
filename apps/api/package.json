@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@bltx/core": "1.6.0",
-    "@bltx/db": "1.6.6",
+    "@bltx/db": "1.6.7",
     "@elysiajs/cors": "1.4.0",
     "@elysiajs/cron": "1.4.1",
     "@elysiajs/jwt": "1.4.0",
@@ -34,7 +34,7 @@
     "ts-pattern": "5.9.0"
   },
   "devDependencies": {
-    "@bltx/test": "1.6.0",
+    "@bltx/test": "1.6.1",
     "@electric-sql/pglite": "0.3.5",
     "@testcontainers/redis": "11.11.0",
     "@types/pg": "8.15.5",
