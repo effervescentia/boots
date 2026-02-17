@@ -4,7 +4,7 @@ metadata:
   name: gateway
   namespace: boots
   annotations:
-    cert-manager.io/cluster-issuer: boots-cluster-issuer
+    cert-manager.io/issuer: issuer
 spec:
   gatewayClassName: traefik
   listeners:

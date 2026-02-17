@@ -1,7 +1,7 @@
 apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+kind: Issuer
 metadata:
-  name: boots-cluster-issuer
+  name: issuer
   namespace: boots
 spec:
   acme:
@@ -9,7 +9,7 @@ spec:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     # server: {{ .Values.issuer.acme.server }}
     privateKeySecretRef:
-      name: boots-cluster-issuer-key
+      name: issuer-key
     solvers:
       - http01:
           gatewayHTTPRoute:

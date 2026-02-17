@@ -2,6 +2,7 @@ package com.effervescentia.boots.ui.page.auth
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,10 +18,9 @@ import kotlinx.coroutines.launch
 class SignupState : ViewModel() {
   fun signup(ctx: Context) {
     viewModelScope.launch {
-
       try {
         val registration = Client.auth.negotiateSignup().string()
-        Log.w("Sigup", "registration $registration")
+        Log.w("Signup", "registration $registration")
 
         val credential = CredentialManager.create(ctx).createCredential(
           ctx,
@@ -38,11 +38,9 @@ class SignupState : ViewModel() {
           else -> throw Error("Unsupported credential type")
         }
       } catch (e: Exception) {
-        Log.w("Sigup", "error caught")
-        Log.w("Sigup", e)
+        Log.w("Signup", "error caught")
+        Log.w("Signup", e)
       }
-
-
     }
   }
 }
@@ -51,7 +49,9 @@ class SignupState : ViewModel() {
 fun Signup(state: SignupState = SignupState()) {
   val ctx = LocalContext.current
 
-  Button(onClick = { state.signup(ctx) }) {
-    Text("Create Account")
+  Column {
+    Button(onClick = { state.signup(ctx) }) {
+      Text("Create Account")
+    }
   }
 }
