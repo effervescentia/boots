@@ -37,20 +37,15 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
   .post(
     '/signup/verify',
     async ({ service, sessionService, body, cookie: { signupRequestID, accessToken } }) => {
-      try {
-        const requestID = signupRequestID.value;
-        if (!requestID) throw new NotFoundError();
-        signupRequestID.remove();
+      const requestID = signupRequestID.value;
+      if (!requestID) throw new NotFoundError();
+      signupRequestID.remove();
 
-        const { account, session } = await service.verifySignup(requestID, body);
+      const { account, session } = await service.verifySignup(requestID, body);
 
-        await sessionService.refreshAccessToken(accessToken, session.id);
+      await sessionService.refreshAccessToken(accessToken, session.id);
 
-        return { account };
-      } catch (err) {
-        console.log(err);
-        throw err;
-      }
+      return { account };
     },
     {
       body: VerifyWebSignupRequest,

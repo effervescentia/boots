@@ -55,6 +55,8 @@ dependencies {
   implementation(libs.retrofit)
   implementation(libs.retrofit.converter.kotlinx.serialization)
 
+  implementation(libs.persistentcookiejar)
+
   implementation(libs.androidx.activity)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.appcompat)

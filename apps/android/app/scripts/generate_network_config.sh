@@ -17,18 +17,22 @@ curl https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem > "$RAW_R
 
 cat << EOF > "$XML_RES_DIR/network_security_config.xml"
 <?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-  <domain-config cleartextTrafficPermitted="false">
-    <domain includeSubdomains="true">api.boots.effervescentia.com</domain>
-    <trust-anchors>
-      <certificates src="@raw/acme_staging" />
-    </trust-anchors>
-  </domain-config>
-  <domain-config cleartextTrafficPermitted="false">
-    <domain includeSubdomains="true">app.boots.effervescentia.com</domain>
-    <trust-anchors>
-      <certificates src="@raw/acme_staging" />
-    </trust-anchors>
-  </domain-config>
-</network-security-config>
+<network-security-config />
 EOF
+# cat << EOF > "$XML_RES_DIR/network_security_config.xml"
+# <?xml version="1.0" encoding="utf-8"?>
+# <network-security-config>
+#   <domain-config cleartextTrafficPermitted="false">
+#     <domain includeSubdomains="true">api.boots.effervescentia.com</domain>
+#     <trust-anchors>
+#       <certificates src="@raw/acme_staging" />
+#     </trust-anchors>
+#   </domain-config>
+#   <domain-config cleartextTrafficPermitted="false">
+#     <domain includeSubdomains="true">app.boots.effervescentia.com</domain>
+#     <trust-anchors>
+#       <certificates src="@raw/acme_staging" />
+#     </trust-anchors>
+#   </domain-config>
+# </network-security-config>
+# EOF

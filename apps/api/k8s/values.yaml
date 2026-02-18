@@ -27,6 +27,9 @@ route:
 web:
   origin: https://app.boots.effervescentia.com:1337
 
+android:
+  fingerprint: B5:43:1F:3D:77:C6:9F:4B:75:5D:74:3E:B1:43:B6:4D:B9:6E:C8:FB:A7:8F:A1:25:9B:34:F1:2D:0C:02:EC:1F
+
 postgres:
   hostname: db-postgres
   port: 5432
@@ -44,3 +47,8 @@ account:
     expiry:
       short: 1d
       long: 1mo
+
+cron:
+  directory: build
+  extension: js
+  args: ''

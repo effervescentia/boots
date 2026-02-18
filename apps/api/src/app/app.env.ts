@@ -6,6 +6,8 @@ export const EnvironmentDTO = t.Object({
 
   WEB_ORIGIN: t.String(),
 
+  ANDROID_FINGERPRINT: t.String(),
+
   JWT_AUTH_SECRET: t.String(),
 
   POSTGRES_HOSTNAME: t.String(),

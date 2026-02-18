@@ -11,6 +11,7 @@
 !*/*/docker/**
 !*/*/public/**
 !*/*/src/**
+!*/*/scripts/**
 !*/*/test/**
 !*/*/types/**
 node_modules/**

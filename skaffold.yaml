@@ -51,7 +51,7 @@ build:
 
 manifests:
   rawYaml:
-    - k8s/issuer-staging.yaml
+    - k8s/issuer-production.yaml
     - k8s/gateway.yaml
 
 deploy:
@@ -122,6 +122,10 @@ profiles:
         path: /deploy/helm/releases/1/setValues
         value:
           health.enabled: false
+          cron:
+            directory: src
+            extension: ts
+            args: '--cwd apps/api'
 
       # dev web config
       - op: replace

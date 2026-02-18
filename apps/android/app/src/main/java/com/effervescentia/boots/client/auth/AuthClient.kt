@@ -1,10 +1,9 @@
 package com.effervescentia.boots.client.auth
 
 import kotlinx.serialization.Serializable
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.http.Body
-import retrofit2.http.Headers
 import retrofit2.http.POST
 import kotlin.time.Instant
 
@@ -46,7 +45,6 @@ interface AuthClient {
   @POST("auth/android/signup/negotiate")
   suspend fun negotiateSignup(): ResponseBody
 
-  @Headers("Content-Type: application/json")
   @POST("auth/android/signup/verify")
-  fun verifySignup(@Body body: String): Call<AuthenticatedResponse>
+  suspend fun verifySignup(@Body body: RequestBody): AuthenticatedResponse
 }

@@ -34,7 +34,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - 'bun src/heartbeat/heartbeat-expiry.cron.ts'
+                - 'bun {{ .Values.cron.args }} {{ .Values.cron.directory }}/heartbeat/heartbeat-expiry.cron.{{ .Values.cron.extension }}'
               envFrom:
                 - secretRef:
                     name: "{{ include "boots-api.fullname" . }}-secrets"

@@ -5,4 +5,4 @@ export interface Account {
   username: string;
 }
 
-export const accountAtom = atom(null as Account | null);
+export const accountAtom = atom<Account | null>(null);

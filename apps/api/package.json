@@ -3,7 +3,7 @@
   "type": "module",
   "main": "src/lib.ts",
   "scripts": {
-    "build": "bun build ./src/main.ts --outdir ./build --target bun",
+    "build": "bun run ./scripts/build.ts",
     "check:types": "tsc --noEmit",
     "dev": "bun --watch src/main.ts",
     "db:generate": "bunx --bun drizzle-kit generate --config drizzle.config.mts",

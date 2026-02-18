@@ -8,54 +8,44 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CreatePublicKeyCredentialRequest
+import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CredentialManager
-import androidx.credentials.exceptions.domerrors.SecurityError
-import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.effervescentia.boots.client.Client
+import com.effervescentia.boots.client.jsonContentType
 import kotlinx.coroutines.launch
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class SignupState : ViewModel() {
   fun signup(ctx: Context) {
+    val client = Client(ctx)
+
     viewModelScope.launch {
       try {
-        val registration = Client.auth.negotiateSignup().string()
+        val registration = client.auth.negotiateSignup().string()
         Log.w("Signup", "registration $registration")
 
-        val credential = CredentialManager.create(ctx).createCredential(
-          ctx,
-          CreatePublicKeyCredentialRequest(registration)
-        )
+        val credential = CredentialManager.create(ctx)
+          .createCredential(ctx, CreatePublicKeyCredentialRequest(registration))
 
-//        when (credential) {
-//          is CreatePublicKeyCredentialResponse -> {
-//            val res = Client.auth.verifySignup(credential.registrationResponseJson).execute()
-//            if (!res.isSuccessful || res.body() == null) throw Error("Failed to verify signup")
-//
-//            Log.w("Signup", res.body()?.account?.username.orEmpty())
-//          }
-//
-//          else -> throw Error("Unsupported credential type")
-//        }
+        when (credential) {
+          is CreatePublicKeyCredentialResponse -> {
+            Log.w(
+              "Signup",
+              "CreatePublicKeyCredentialResponse: ${credential.registrationResponseJson}"
+            )
+            val verification = credential.registrationResponseJson.toRequestBody(jsonContentType)
+            val result = client.auth.verifySignup(verification)
+
+            Log.w("Signup", "Username ${result.account.username}")
+          }
+
+          else -> throw Error("Unsupported credential type")
+        }
       } catch (e: Exception) {
         Log.w("Signup", "error caught")
         Log.w("Signup", e)
-
-        when (e) {
-          is CreatePublicKeyCredentialDomException -> {
-            Log.w("Signup", "CreatePublicKeyCredentialDomException")
-            Log.w("Signup", e.message.orEmpty())
-
-            when (e.domError) {
-              is SecurityError -> {
-                Log.w("Signup", "SecurityError")
-                Log.w("Signup", e.domError.type)
-              }
-            }
-          }
-        }
-//        Log.w("Signup", e)
       }
     }
   }

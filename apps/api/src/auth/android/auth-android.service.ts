@@ -13,12 +13,18 @@ import { AuthAndroidCredentialDB } from './data/auth-android-credential.db';
 import type { AuthDeviceType } from './data/auth-device-type.enum';
 import type { VerifyAndroidSignup } from './data/verify-android-signup.req';
 
-const RP_ID = 'api.boots.effervescentia.com';
+const RP_ID = 'effervescentia.com';
 const RP_NAME = 'Boots 4 Good';
 
 export class AuthAndroidService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:android:signup:challenge';
   static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
+
+  private static fingerprintToBase64(fingerprint: string) {
+    const buffer = Buffer.from(fingerprint.replaceAll(':', ''), 'hex');
+
+    return buffer.toString('base64').replaceAll('+', '-').replace('/', '_').replace(/=+$/, '');
+  }
 
   private readonly account = new AccountService(this.db);
 
@@ -34,7 +40,13 @@ export class AuthAndroidService extends DataService {
       rpID: RP_ID,
       rpName: RP_NAME,
       userName: 'boots',
+      userDisplayName: 'boots',
       attestationType: 'none',
+      authenticatorSelection: {
+        requireResidentKey: true,
+        residentKey: 'required',
+        userVerification: 'required',
+      },
     });
 
     await this.redis.setTypedHashField(
@@ -65,7 +77,7 @@ export class AuthAndroidService extends DataService {
     const verification = await verifyRegistrationResponse({
       response: registration,
       expectedChallenge: challenge.challenge,
-      expectedOrigin: this.env.WEB_ORIGIN,
+      expectedOrigin: `android:apk-key-hash:${AuthAndroidService.fingerprintToBase64(this.env.ANDROID_FINGERPRINT)}`,
       expectedRPID: RP_ID,
     });
 
@@ -76,9 +88,9 @@ export class AuthAndroidService extends DataService {
       new AuthAndroidService(tx).createCredential(accountID, {
         credentialID: credential.id,
         webAuthnUserID: challenge.webAuthnUserID,
-        publicKey: credential.publicKey,
+        publicKey: Buffer.from(credential.publicKey),
         counter: credential.counter,
-        transports: credential.transports as AuthTransport[],
+        transports: (credential.transports ?? []) as AuthTransport[],
         deviceType: credentialDeviceType as AuthDeviceType,
         isBackedUp: credentialBackedUp,
       }),

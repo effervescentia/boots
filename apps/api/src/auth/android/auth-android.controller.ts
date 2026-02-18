@@ -1,5 +1,5 @@
 import { DatabaseGlobal } from '@api/db/db.global';
-import Elysia, { NotFoundError, t } from 'elysia';
+import Elysia, { type CookieOptions, NotFoundError, t } from 'elysia';
 import { SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
 import { AuthenticatedResponse } from '../data/authenticated.res';
@@ -7,6 +7,11 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { AuthAndroidService } from './auth-android.service';
 import { type NegotiateAndroidSignup, NegotiateAndroidSignupResponse } from './data/negotiate-android-signup.res';
 import { VerifyAndroidSignupRequest } from './data/verify-android-signup.req';
+
+const ANDROID_AUTH_COOKIE: CookieOptions = {
+  ...AUTH_COOKIE,
+  secure: false,
+};
 
 export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
   .derive({ as: 'scoped' }, () => ({
@@ -20,7 +25,7 @@ export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
       const { registration, requestID } = await service.negotiateSignup();
 
       signupRequestID.set({
-        ...AUTH_COOKIE,
+        ...ANDROID_AUTH_COOKIE,
         value: requestID,
         maxAge: SIGNUP_TTL * 1000,
       });
@@ -28,7 +33,7 @@ export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
       return registration as NegotiateAndroidSignup;
     },
     {
-      cookie: t.Object({ signupRequestID: t.Optional(t.String()) }),
+      cookie: t.Cookie({ signupRequestID: t.Optional(t.String()) }),
       response: NegotiateAndroidSignupResponse,
     },
   )
@@ -36,20 +41,15 @@ export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
   .post(
     '/signup/verify',
     async ({ service, sessionService, body, cookie: { signupRequestID, accessToken } }) => {
-      try {
-        const requestID = signupRequestID.value;
-        if (!requestID) throw new NotFoundError();
-        signupRequestID.remove();
+      const requestID = signupRequestID.value;
+      if (!requestID) throw new NotFoundError();
+      signupRequestID.remove();
 
-        const { account, session } = await service.verifySignup(requestID, body);
+      const { account, session } = await service.verifySignup(requestID, body);
 
-        await sessionService.refreshAccessToken(accessToken, session.id);
+      await sessionService.refreshAccessToken(accessToken, session.id);
 
-        return { account };
-      } catch (err) {
-        console.log(err);
-        throw err;
-      }
+      return { account };
     },
     {
       body: VerifyAndroidSignupRequest,

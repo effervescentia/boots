@@ -8,6 +8,8 @@ data:
   PORT: {{ .Values.service.port | quote }}
 
   WEB_ORIGIN: {{ .Values.web.origin }}
+
+  ANDROID_FINGERPRINT: {{ .Values.android.fingerprint }}
   
   POSTGRES_HOSTNAME: {{ .Values.postgres.hostname }}
   POSTGRES_PORT: {{ .Values.postgres.port | quote }}

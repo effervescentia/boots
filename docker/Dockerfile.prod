@@ -54,6 +54,7 @@ ARG APP
 
 COPY --from=install "/temp/prod/apps/$APP/node_modules" "./apps/$APP/node_modules/"
 COPY --from=build "/home/bun/app/apps/$APP/build" "./apps/$APP/build/"
+COPY --from=build "/home/bun/app/apps/$APP/public" "./apps/$APP/public/"
 COPY "apps/$APP/docker" "."
 
 ARG ENTRYPOINT_CMD="bun --cwd apps/$APP build/main.js"

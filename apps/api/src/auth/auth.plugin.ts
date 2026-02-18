@@ -7,7 +7,7 @@ import { AuthSessionDB } from './data/auth-session.db';
 import { AuthSessionService } from './session/auth-session.service';
 
 export const AUTH_COOKIE: CookieOptions = {
-  domain: 'api.boots.localhost',
+  domain: 'api.boots.effervescentia.com',
   sameSite: true,
   httpOnly: true,
   secure: true,
