@@ -1,11 +1,19 @@
 import { DatabaseGlobal } from '@api/db/db.global';
-import Elysia, { type CookieOptions, NotFoundError, t } from 'elysia';
-import { SIGNUP_TTL } from '../auth.const';
+import Elysia, { type CookieOptions, NotFoundError } from 'elysia';
+import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
+import {
+  AuthNegotiateLoginCookie,
+  AuthNegotiateSignupCookie,
+  AuthVerifyLoginCookie,
+  AuthVerifySignupCookie,
+} from '../data/auth.cookie';
 import { AuthenticatedResponse } from '../data/authenticated.res';
 import { AuthSessionService } from '../session/auth-session.service';
 import { AuthAndroidService } from './auth-android.service';
+import { type NegotiateAndroidLogin, NegotiateAndroidLoginResponse } from './data/negotiate-android-login.res';
 import { type NegotiateAndroidSignup, NegotiateAndroidSignupResponse } from './data/negotiate-android-signup.res';
+import { VerifyAndroidLoginRequest } from './data/verify-android-login.req';
 import { VerifyAndroidSignupRequest } from './data/verify-android-signup.req';
 
 const ANDROID_AUTH_COOKIE: CookieOptions = {
@@ -33,7 +41,7 @@ export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
       return registration as NegotiateAndroidSignup;
     },
     {
-      cookie: t.Cookie({ signupRequestID: t.Optional(t.String()) }),
+      cookie: AuthNegotiateSignupCookie,
       response: NegotiateAndroidSignupResponse,
     },
   )
@@ -53,56 +61,52 @@ export const AuthAndroidController = new Elysia({ prefix: '/auth/android' })
     },
     {
       body: VerifyAndroidSignupRequest,
-      cookie: t.Cookie({
-        signupRequestID: t.Optional(t.String()),
-        accessToken: t.Optional(t.String()),
-      }),
+      cookie: AuthVerifySignupCookie,
+      response: AuthenticatedResponse,
+    },
+  )
+
+  .post(
+    '/login/negotiate',
+    async ({ service, cookie: { loginRequestID } }) => {
+      const { authentication, requestID } = await service.negotiateLogin();
+
+      loginRequestID.set({
+        ...AUTH_COOKIE,
+        value: requestID,
+        maxAge: LOGIN_TTL * 1000,
+      });
+
+      return authentication as NegotiateAndroidLogin;
+    },
+    {
+      cookie: AuthNegotiateLoginCookie,
+      response: NegotiateAndroidLoginResponse,
+    },
+  )
+
+  .post(
+    '/login/verify',
+    async ({ service, sessionService, body, cookie: { loginRequestID, accessToken } }) => {
+      try {
+        if (!loginRequestID.value) throw new NotFoundError();
+
+        const requestID = loginRequestID.value;
+        loginRequestID.remove();
+
+        const { account, session } = await service.verifyLogin(requestID, body);
+
+        await sessionService.refreshAccessToken(accessToken, session.id);
+
+        return { account };
+      } catch (err) {
+        console.log(err);
+        throw err;
+      }
+    },
+    {
+      body: VerifyAndroidLoginRequest,
+      cookie: AuthVerifyLoginCookie,
       response: AuthenticatedResponse,
     },
   );
-
-// .post(
-//   '/login/negotiate',
-//   async ({ service, body, cookie: { loginRequestID } }) => {
-//     const { challenge, requestID } = await service.negotiateLogin(body);
-
-//     loginRequestID.set({
-//       ...AUTH_COOKIE,
-//       value: requestID,
-//       maxAge: LOGIN_TTL * 1000,
-//     });
-
-//     return { challenge };
-//   },
-//   {
-//     body: NegotiateWebLoginRequest,
-//     cookie: t.Cookie({
-//       loginRequestID: t.Optional(t.String()),
-//     }),
-//     response: LoginChallengeResponse,
-//   },
-// )
-
-// .post(
-//   '/login/verify',
-//   async ({ service, sessionService, body, cookie: { loginRequestID, accessToken } }) => {
-//     if (!loginRequestID.value) throw new NotFoundError();
-
-//     const requestID = loginRequestID.value;
-//     loginRequestID.remove();
-
-//     const { account, session } = await service.verifyLogin(requestID, body);
-
-//     await sessionService.refreshAccessToken(accessToken, session.id);
-
-//     return { account };
-//   },
-//   {
-//     body: VerifyWebLoginRequest,
-//     cookie: t.Cookie({
-//       loginRequestID: t.Optional(t.String()),
-//       accessToken: t.Optional(t.String()),
-//     }),
-//     response: AuthenticatedResponse,
-//   },
-// );

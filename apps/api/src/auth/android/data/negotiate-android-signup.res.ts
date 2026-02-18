@@ -1,4 +1,11 @@
-import { AuthTransportDTO } from '@api/auth/data/auth-transport.enum';
+import {
+  WebAuthnAttachmentDTO,
+  WebAuthnCredentialDTO,
+  WebAuthnCredentialTypeDTO,
+  WebAuthnExtensionDTO,
+  WebAuthnHintDTO,
+  WebAuthnRequirementDTO,
+} from '@api/auth/data/webauthn.dto';
 import { type Static, t } from 'elysia';
 
 export type NegotiateAndroidSignup = Static<typeof NegotiateAndroidSignupResponse>;
@@ -9,7 +16,9 @@ export const NegotiateAndroidSignupResponse = t.Object({
   attestationFormats: t.Optional(
     t.Array(t.UnionEnum(['fido-u2f', 'packed', 'android-safetynet', 'android-key', 'tpm', 'apple', 'none'])),
   ),
-  hints: t.Optional(t.Array(t.UnionEnum(['hybrid', 'security-key', 'client-device']))),
+  excludeCredentials: t.Optional(t.Array(WebAuthnCredentialDTO)),
+  hints: t.Optional(t.Array(WebAuthnHintDTO)),
+  extensions: t.Optional(WebAuthnExtensionDTO),
   timeout: t.Optional(t.Number()),
 
   rp: t.Object({
@@ -25,36 +34,17 @@ export const NegotiateAndroidSignupResponse = t.Object({
 
   authenticatorSelection: t.Optional(
     t.Object({
-      authenticatorAttachment: t.Optional(t.UnionEnum(['cross-platform', 'platform'])),
+      authenticatorAttachment: t.Optional(WebAuthnAttachmentDTO),
       requireResidentKey: t.Optional(t.Boolean()),
-      residentKey: t.Optional(t.UnionEnum(['discouraged', 'preferred', 'required'])),
-      userVerification: t.Optional(t.UnionEnum(['discouraged', 'preferred', 'required'])),
-    }),
-  ),
-
-  excludeCredentials: t.Optional(
-    t.Array(
-      t.Object({
-        id: t.String(),
-        type: t.Literal('public-key'),
-        transports: t.Optional(t.Array(AuthTransportDTO)),
-      }),
-    ),
-  ),
-
-  extensions: t.Optional(
-    t.Object({
-      appid: t.Optional(t.String()),
-      credProps: t.Optional(t.Boolean()),
-      hmacCreateSecret: t.Optional(t.Boolean()),
-      minPinLength: t.Optional(t.Boolean()),
+      residentKey: t.Optional(WebAuthnRequirementDTO),
+      userVerification: t.Optional(WebAuthnRequirementDTO),
     }),
   ),
 
   pubKeyCredParams: t.Array(
     t.Object({
       alg: t.Number(),
-      type: t.Literal('public-key'),
+      type: WebAuthnCredentialTypeDTO,
     }),
   ),
 });

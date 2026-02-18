@@ -1,16 +1,18 @@
 import { AccountService } from '@api/account/account.service';
 import { DataService } from '@api/global/data.service';
 import { insertOne } from '@bltx/db';
-import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
-import type { InferInsertModel } from 'drizzle-orm';
+import * as webauthn from '@simplewebauthn/server';
+import base64url from 'base64url';
+import { eq, type InferInsertModel } from 'drizzle-orm';
 import { NotFoundError } from 'elysia';
-import { SIGNUP_TTL } from '../auth.const';
+import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AuthCredentialDB } from '../data/auth-credential.db';
 import { AuthSessionDB } from '../data/auth-session.db';
 import type { AuthTransport } from '../data/auth-transport.enum';
 import { AndroidChallengeDetailsDTO } from './data/android-challenge-details.dto';
 import { AuthAndroidCredentialDB } from './data/auth-android-credential.db';
 import type { AuthDeviceType } from './data/auth-device-type.enum';
+import type { VerifyAndroidLogin } from './data/verify-android-login.req';
 import type { VerifyAndroidSignup } from './data/verify-android-signup.req';
 
 const RP_ID = 'effervescentia.com';
@@ -20,10 +22,8 @@ export class AuthAndroidService extends DataService {
   static readonly SIGNUP_CHALLENGE = 'auth:android:signup:challenge';
   static readonly LOGIN_CHALLENGE = 'auth:android:login:challenge';
 
-  private static fingerprintToBase64(fingerprint: string) {
-    const buffer = Buffer.from(fingerprint.replaceAll(':', ''), 'hex');
-
-    return buffer.toString('base64').replaceAll('+', '-').replace('/', '_').replace(/=+$/, '');
+  private static fingerprintToOrigin(fingerprint: string) {
+    return `android:apk-key-hash:${base64url.encode(fingerprint)}`;
   }
 
   private readonly account = new AccountService(this.db);
@@ -36,7 +36,7 @@ export class AuthAndroidService extends DataService {
 
   async negotiateSignup() {
     const requestID = Bun.randomUUIDv7();
-    const registration = await generateRegistrationOptions({
+    const registration = await webauthn.generateRegistrationOptions({
       rpID: RP_ID,
       rpName: RP_NAME,
       userName: 'boots',
@@ -65,7 +65,7 @@ export class AuthAndroidService extends DataService {
     return { requestID, registration };
   }
 
-  async verifySignup(requestID: string, registration: VerifyAndroidSignup) {
+  async verifySignup(requestID: string, data: VerifyAndroidSignup) {
     const challenge = await this.redis.getTypedHashField(
       AndroidChallengeDetailsDTO,
       AuthAndroidService.SIGNUP_CHALLENGE,
@@ -74,10 +74,10 @@ export class AuthAndroidService extends DataService {
     );
     if (!challenge) throw new NotFoundError();
 
-    const verification = await verifyRegistrationResponse({
-      response: registration,
+    const verification = await webauthn.verifyRegistrationResponse({
+      response: data,
       expectedChallenge: challenge.challenge,
-      expectedOrigin: `android:apk-key-hash:${AuthAndroidService.fingerprintToBase64(this.env.ANDROID_FINGERPRINT)}`,
+      expectedOrigin: AuthAndroidService.fingerprintToOrigin(this.env.ANDROID_FINGERPRINT),
       expectedRPID: RP_ID,
     });
 
@@ -101,48 +101,48 @@ export class AuthAndroidService extends DataService {
     return { account, session };
   }
 
-  // async negotiateLogin(_data: NegotiateWebLogin) {
-  //   const requestID = Bun.randomUUIDv7();
-  //   const challenge = webauthn.randomChallenge();
+  async negotiateLogin() {
+    const requestID = Bun.randomUUIDv7();
+    const authentication = await webauthn.generateAuthenticationOptions({ rpID: RP_ID });
 
-  //   await this.redis.setHashField(AuthAndroidService.LOGIN_CHALLENGE, requestID, challenge, { ttl: LOGIN_TTL });
+    await this.redis.setHashField(AuthAndroidService.LOGIN_CHALLENGE, requestID, authentication.challenge, {
+      ttl: LOGIN_TTL,
+    });
 
-  //   return { requestID, challenge };
-  // }
+    return { requestID, authentication };
+  }
 
-  // async verifyLogin(requestID: string, data: VerifyWebLogin) {
-  //   const challenge = await this.redis.getHashField(AuthAndroidService.LOGIN_CHALLENGE, requestID, { delete: true });
-  //   if (!challenge) throw new NotFoundError();
+  async verifyLogin(requestID: string, data: VerifyAndroidLogin) {
+    const challenge = await this.redis.getHashField(AuthAndroidService.LOGIN_CHALLENGE, requestID, { delete: true });
+    if (!challenge) throw new NotFoundError();
 
-  //   const credential = await this.db.query.AuthCredentialDB.findFirst({
-  //     where: eq(AuthCredentialDB.id, data.authentication.id),
-  //     with: { android: true },
-  //   });
-  //   if (!credential?.android) throw new NotFoundError();
+    const credential = await this.db.query.AuthCredentialDB.findFirst({
+      where: eq(AuthCredentialDB.id, data.id),
+      with: { android: true },
+    });
+    if (!credential?.android) throw new NotFoundError();
 
-  //   const account = await this.account.getDetails(credential.accountID);
-  //   if (!account) throw new NotFoundError();
+    const account = await this.account.getDetails(credential.accountID);
+    if (!account) throw new NotFoundError();
 
-  //   const result = await webauthn.verifyAuthentication(
-  //     data.authentication,
-  //     {
-  //       id: credential.id,
-  //       publicKey: credential.android.publicKey,
-  //       algorithm: credential.android.algorithm,
-  //       transports: credential.android.transports,
-  //     },
-  //     {
-  //       origin: this.env.WEB_ORIGIN,
-  //       challenge,
-  //       userVerified: true,
-  //     },
-  //   );
+    const verification = await webauthn.verifyAuthenticationResponse({
+      response: data,
+      expectedChallenge: challenge,
+      expectedOrigin: AuthAndroidService.fingerprintToOrigin(this.env.ANDROID_FINGERPRINT),
+      expectedRPID: RP_ID,
+      credential: {
+        id: credential.id,
+        publicKey: credential.android.publicKey,
+        counter: credential.android.counter,
+        transports: credential.android.transports,
+      },
+    });
 
-  //   if (!result.userVerified) throw new NotFoundError();
+    if (!verification.verified) throw new NotFoundError();
 
-  //   await this.db.delete(AuthSessionDB).where(eq(AuthSessionDB.credentialID, credential.id));
-  //   const session = await insertOne(this.db, AuthSessionDB, { credentialID: credential.id });
+    await this.db.delete(AuthSessionDB).where(eq(AuthSessionDB.credentialID, credential.id));
+    const session = await insertOne(this.db, AuthSessionDB, { credentialID: credential.id });
 
-  //   return { account, session };
-  // }
+    return { account, session };
+  }
 }

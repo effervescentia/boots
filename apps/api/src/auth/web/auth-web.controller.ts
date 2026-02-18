@@ -1,7 +1,13 @@
 import { DatabaseGlobal } from '@api/db/db.global';
-import Elysia, { NotFoundError, t } from 'elysia';
+import Elysia, { NotFoundError } from 'elysia';
 import { LOGIN_TTL, SIGNUP_TTL } from '../auth.const';
 import { AUTH_COOKIE } from '../auth.plugin';
+import {
+  AuthNegotiateLoginCookie,
+  AuthNegotiateSignupCookie,
+  AuthVerifyLoginCookie,
+  AuthVerifySignupCookie,
+} from '../data/auth.cookie';
 import { AuthenticatedResponse } from '../data/authenticated.res';
 import { AuthSessionService } from '../session/auth-session.service';
 import { AuthWebService } from './auth-web.service';
@@ -29,7 +35,7 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
       return { challenge };
     },
     {
-      cookie: t.Object({ signupRequestID: t.Optional(t.String()) }),
+      cookie: AuthNegotiateSignupCookie,
       response: WebChallengeResponse,
     },
   )
@@ -49,10 +55,7 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
     },
     {
       body: VerifyWebSignupRequest,
-      cookie: t.Cookie({
-        signupRequestID: t.Optional(t.String()),
-        accessToken: t.Optional(t.String()),
-      }),
+      cookie: AuthVerifySignupCookie,
       response: AuthenticatedResponse,
     },
   )
@@ -71,9 +74,7 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
       return { challenge };
     },
     {
-      cookie: t.Cookie({
-        loginRequestID: t.Optional(t.String()),
-      }),
+      cookie: AuthNegotiateLoginCookie,
       response: WebChallengeResponse,
     },
   )
@@ -94,10 +95,7 @@ export const AuthWebController = new Elysia({ prefix: '/auth/web' })
     },
     {
       body: VerifyWebLoginRequest,
-      cookie: t.Cookie({
-        loginRequestID: t.Optional(t.String()),
-        accessToken: t.Optional(t.String()),
-      }),
+      cookie: AuthVerifyLoginCookie,
       response: AuthenticatedResponse,
     },
   );

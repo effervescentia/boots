@@ -38,14 +38,14 @@ export class AuthWebService extends DataService {
     const challenge = await this.redis.getHashField(AuthWebService.SIGNUP_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
-    const result = await webauthn.verifyRegistration(registration, {
+    const verification = await webauthn.verifyRegistration(registration, {
       origin: this.env.WEB_ORIGIN,
       challenge,
     });
 
-    if (!result.userVerified) throw new NotFoundError();
+    if (!verification.userVerified) throw new NotFoundError();
 
-    const { credential } = result;
+    const { credential } = verification;
     const { account } = await this.account.create((tx, accountID) =>
       new AuthWebService(tx).createCredential(accountID, {
         credentialID: credential.id,
@@ -69,12 +69,12 @@ export class AuthWebService extends DataService {
     return { requestID, challenge };
   }
 
-  async verifyLogin(requestID: string, data: VerifyWebLogin) {
+  async verifyLogin(requestID: string, { authentication }: VerifyWebLogin) {
     const challenge = await this.redis.getHashField(AuthWebService.LOGIN_CHALLENGE, requestID, { delete: true });
     if (!challenge) throw new NotFoundError();
 
     const credential = await this.db.query.AuthCredentialDB.findFirst({
-      where: eq(AuthCredentialDB.id, data.authentication.id),
+      where: eq(AuthCredentialDB.id, authentication.id),
       with: { web: true },
     });
     if (!credential?.web) throw new NotFoundError();
@@ -82,8 +82,8 @@ export class AuthWebService extends DataService {
     const account = await this.account.getDetails(credential.accountID);
     if (!account) throw new NotFoundError();
 
-    const result = await webauthn.verifyAuthentication(
-      data.authentication,
+    const verification = await webauthn.verifyAuthentication(
+      authentication,
       {
         id: credential.id,
         publicKey: credential.web.publicKey,
@@ -97,7 +97,7 @@ export class AuthWebService extends DataService {
       },
     );
 
-    if (!result.userVerified) throw new NotFoundError();
+    if (!verification.userVerified) throw new NotFoundError();
 
     await this.db.delete(AuthSessionDB).where(eq(AuthSessionDB.credentialID, credential.id));
     const session = await insertOne(this.db, AuthSessionDB, { credentialID: credential.id });

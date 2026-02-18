@@ -1,20 +1,20 @@
+import {
+  WebAuthnAssertionResponseDTO,
+  WebAuthnAttachmentDTO,
+  WebAuthnCredentialTypeDTO,
+} from '@api/auth/data/webauthn.dto';
 import { type Static, t } from 'elysia';
 
 export type VerifyWebLogin = Static<typeof VerifyWebLoginRequest>;
 
 export const VerifyWebLoginRequest = t.Object({
   authentication: t.Object({
-    type: t.Literal('public-key'),
+    type: WebAuthnCredentialTypeDTO,
     id: t.String(),
     rawId: t.String(),
-    authenticatorAttachment: t.Optional(t.UnionEnum(['cross-platform', 'platform'])),
+    authenticatorAttachment: t.Optional(WebAuthnAttachmentDTO),
     clientExtensionResults: t.Any(),
 
-    response: t.Object({
-      clientDataJSON: t.String(),
-      authenticatorData: t.String(),
-      signature: t.String(),
-      userHandle: t.Optional(t.String()),
-    }),
+    response: WebAuthnAssertionResponseDTO,
   }),
 });

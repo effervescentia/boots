@@ -1,14 +1,15 @@
 import { AuthTransportDTO } from '@api/auth/data/auth-transport.enum';
+import { WebAuthnAttachmentDTO, WebAuthnCredentialTypeDTO } from '@api/auth/data/webauthn.dto';
 import { type Static, t } from 'elysia';
 
 export type VerifyWebSignup = Static<typeof VerifyWebSignupRequest>;
 
 export const VerifyWebSignupRequest = t.Object({
   registration: t.Object({
-    type: t.Literal('public-key'),
+    type: WebAuthnCredentialTypeDTO,
     id: t.String(),
     rawId: t.String(),
-    authenticatorAttachment: t.Optional(t.UnionEnum(['cross-platform', 'platform'])),
+    authenticatorAttachment: t.Optional(WebAuthnAttachmentDTO),
 
     clientExtensionResults: t.Object({
       appid: t.Optional(t.Boolean()),
